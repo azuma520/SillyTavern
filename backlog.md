@@ -76,3 +76,5 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 ---
 
 ## 待辦
+
+- [SOP 候選] [case-count: 1] 診斷系統行為問題前，先盤點所有會影響該行為的輸入來源並量化佔比，再決定從哪下手

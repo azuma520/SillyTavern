@@ -67,6 +67,43 @@ E2E tests (`tests/frontend/*.e2e.js`, mostly for the macro engine) require the s
 - Keep PRs small: soft limit ~200 changed lines; split larger work.
 - English only for commit messages, PR descriptions, and code comments (localization files excepted).
 - Run `npm run lint` before committing; follow existing naming conventions.
+
+## RP 記憶系統工作（character-diary / LIWE / 世界書）
+
+> 本 fork 的個人使用線，與 SillyTavern 上游無關。下列文件都在 repo 根目錄，
+> 且已列入 `.git/info/exclude`——**不要 commit、不要進 PR**。
+
+### 觸發：什麼時候必須先讀文件
+
+以下任一情況，**動手前先讀 `RP記憶系統_設計基礎.md`**：
+
+- 使用者提到：記憶系統／日記／填表／liveTable／世界書／劇情檔案／archive／
+  角色記不住／角色前後矛盾／LIWE／HCDiary
+- 要改 `public/scripts/extensions/third-party/character-diary/`
+- 要改 `data/default-user/worlds/*.json`，或 `settings.json` 的 `extension_settings["character-diary"]`
+
+**先看世界書的常駐注入量，再看擴充**——世界書是上游、擴充是下游（2026-08-29 實測：
+常駐 18,989 字 vs 記憶注入 668 字，比例 1:28，記憶根本競爭不過）。不先解上游，改下游沒有意義。
+
+### 文件索引
+
+| 文件 | 內容 | 什麼時候讀 |
+|---|---|---|
+| `RP記憶系統_設計基礎.md` | **總綱**：五條記憶線、四條實測規律、六條設計原則、診斷手冊、已知的坑、待辦優先序 | **每次動這條線之前** |
+| `世界書設計方法_調度篇.md` | 世界書調度欄位、六類知識配置對照、配置矛盾表、檢查清單 | 做或改任何世界書時 |
+| `記憶體檢_測題與基準_2026-08-29.md` | 失憶測驗八題、標準答案、判分與判讀矩陣 | 要驗證記憶改動的效果時 |
+| `HCDiary修復結案報告_2026-08-24.md` | 2026-08-24 六項修復、三層防線、關鍵位置備忘 | 需要前次修復的脈絡時 |
+
+### 硬性要求
+
+- **改 `index.js` 前先備份**（`index.js.bak_<原因>_<時間戳>`），改後跑 `node --check`
+- **改世界書前先備份**，改後驗證 JSON 可解析
+- `data.js` / `engine.js` / `api.js` / `prompts.js` 只是源碼切片，**改它們不生效**，必須改 `index.js`
+- Windows 下用 python 讀這些資料**必須**帶 `PYTHONIOENCODING=utf-8`，否則 cp950 編碼會炸
+- 擴充改完要 reload：DevTools 開著 + 勾「停用快取」再 F5（`import()` 模組快取，一般重整擋不住）；
+  世界書改完要**完全重啟** ST
+- RP 工作文件與素材一律不進版控
+
 <!-- workflow-harness:start -->
 <!-- 由 workflow-harness plugin 自動加入。本區由 plugin 管理，**請勿手改**。升級用 /init-harness、卸載用 /uninstall-harness（v1.x 後期加）。 -->
 
