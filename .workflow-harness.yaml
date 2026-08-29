@@ -1,0 +1,21 @@
+# workflow-harness — per-project override
+#
+# 解析優先級：本檔 > config/defaults.yaml
+# 可用 keys 見 plugin `config/defaults.yaml`
+#
+# 本檔即使**完全空白**也有用：
+# Stop hook + SessionStart hook 把本檔作為「唯一 opt-in marker」——
+# 找到 → 該專案是使用者明確 opt-in 的、hook 在此守 handoff / 注入 directive；
+# 找不到 → 完全靜默（Stop exit 0、SessionStart 不注入）。
+# 哲學「安裝範圍 ≠ 使用範圍」（installation footprint ≠ opt-in intent）：
+# 全域裝 plugin 但只在開了 `/init-harness` 的專案啟用、避免無關目錄被誤擋。
+#
+# 想覆寫預設值請取消下列範例註解、改成你要的值。
+
+# 範例 1：覆寫 handoff 目錄（預設 `文檔/handoff`）
+# paths:
+#   handoff_dir: docs/handoff
+
+# 範例 2：覆寫近期驗收節點天數閾值（預設 7 天；/pending-verify 用此值分近期 / 遠期）
+# backlog:
+#   near_term_days: 14

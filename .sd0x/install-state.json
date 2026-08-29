@@ -1,0 +1,14 @@
+{
+  "sd0x_version": "3.0.12",
+  "agents_md_hash": "2ca0e6969f8e5ae72b8db36d64af5a3ad9c25273",
+  "agents_md_size": 2149,
+  "hooks_installed": {
+    "commit-msg": { "hash": "b22ddbb0aa87d3672abb6077ff0e5a2ba7ed76bc", "mode": "direct" },
+    "pre-push": { "hash": "f14ec04d1de919cb2bcd65a641c4d4116e3d232b", "mode": "direct" }
+  },
+  "scripts_installed": {
+    "precommit-runner.js": "ed1cf06fa3e7a22557cc5ff3f0a9d7e5b214b2c8",
+    "verify-runner.js": "d545376fe82338882f8e595d9a382a02fa027b43"
+  },
+  "generated_at": "2026-08-29T08:13:30+08:00"
+}
