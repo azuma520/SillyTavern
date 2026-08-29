@@ -4,4 +4,5 @@
 {"id": "task-20260829-build-openloops", "name": "建懸念線：出口用逐條問是非，不用重寫全貌", "status": "TODO", "parent": "task-20260829-rp-memory-rebuild", "harness_schema": "1", "status_changed": "2026-08-29"}
 {"id": "task-20260829-build-lore-line", "name": "建劇情湧現設定線：範圍限劇情長出來的設定，靜態歸世界書", "status": "TODO", "parent": "task-20260829-rp-memory-rebuild", "harness_schema": "1", "status_changed": "2026-08-29"}
 {"id": "task-20260829-diary-retrieval", "name": "日記接出口：啟用 diaryVectors 向量檢索按需撈回", "status": "TODO", "parent": "task-20260829-rp-memory-rebuild", "harness_schema": "1", "status_changed": "2026-08-29"}
-{"id": "task-20260829-worldbook-optimize", "name": "討論世界書優化：可複用 pattern 盤點 + 三項待評估改動（單字 key 自鎖 / 8 條元指令改寫成正面陳述 / 條目精簡砍外貌留動機）", "status": "NEXT", "parent": "task-20260829-rp-memory-rebuild", "harness_schema": "1", "status_changed": "2026-08-29"}
+{"id": "task-20260829-worldbook-optimize", "name": "討論世界書優化：可複用 pattern 盤點 + 三項待評估改動（單字 key 自鎖 / 8 條元指令改寫成正面陳述 / 條目精簡砍外貌留動機）", "status": "DONE", "parent": "task-20260829-rp-memory-rebuild", "harness_schema": "1", "status_changed": "2026-08-29"}
+{"id": "task-20260829-consult-strategy-layer", "name": "向外部 agent 徵詢 Experiential Memory 的 Strategy 層設計，並討論回饋內容", "status": "NEXT", "parent": "task-20260829-rp-memory-rebuild", "harness_schema": "1", "status_changed": "2026-08-29"}
