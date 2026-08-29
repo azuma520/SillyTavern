@@ -70,12 +70,14 @@ E2E tests (`tests/frontend/*.e2e.js`, mostly for the macro engine) require the s
 
 ## RP 記憶系統工作（character-diary / LIWE / 世界書）
 
-> 本 fork 的個人使用線，與 SillyTavern 上游無關。下列文件都在 repo 根目錄，
-> 且已列入 `.git/info/exclude`——**不要 commit、不要進 PR**。
+> 本 fork 的個人使用線，與 SillyTavern 上游無關。所有文件集中在 **`RP記憶/`**，
+> 該目錄整個列入 `.git/info/exclude`——**不要 commit、不要進 PR**。
+> 在 `RP記憶/` 底下新增檔案**不必**再加 exclude pattern（2026-08-29 由逐檔改為目錄級）。
+> 目錄導覽見 `RP記憶/README.md`。
 
 ### 觸發：什麼時候必須先讀文件
 
-以下任一情況，**動手前先讀 `RP記憶系統_設計基礎.md`**：
+以下任一情況，**動手前先讀 `RP記憶/RP記憶系統_設計基礎.md`**：
 
 - 使用者提到：記憶系統／日記／填表／liveTable／世界書／劇情檔案／archive／
   角色記不住／角色前後矛盾／LIWE／HCDiary
@@ -87,12 +89,16 @@ E2E tests (`tests/frontend/*.e2e.js`, mostly for the macro engine) require the s
 
 ### 文件索引
 
+全部路徑相對於 repo 根。完整導覽見 `RP記憶/README.md`。
+
 | 文件 | 內容 | 什麼時候讀 |
 |---|---|---|
-| `RP記憶系統_設計基礎.md` | **總綱**：五條記憶線、四條實測規律、六條設計原則、診斷手冊、已知的坑、待辦優先序 | **每次動這條線之前** |
-| `世界書設計方法_調度篇.md` | 世界書調度欄位、六類知識配置對照、配置矛盾表、檢查清單 | 做或改任何世界書時 |
-| `記憶體檢_測題與基準_2026-08-29.md` | 失憶測驗八題、標準答案、判分與判讀矩陣 | 要驗證記憶改動的效果時 |
-| `HCDiary修復結案報告_2026-08-24.md` | 2026-08-24 六項修復、三層防線、關鍵位置備忘 | 需要前次修復的脈絡時 |
+| `RP記憶/RP記憶系統_設計基礎.md` | **總綱**：五條記憶線、四條實測規律、六條設計原則、診斷手冊、已知的坑、待辦優先序 | **每次動這條線之前** |
+| `RP記憶/世界書設計方法_調度篇.md` | 世界書調度欄位、六類知識配置對照、配置矛盾表、檢查清單 | 做或改任何世界書時 |
+| `RP記憶/實驗與驗證/記憶體檢_測題與基準_2026-08-29.md` | 失憶測驗八題、標準答案、判分與判讀矩陣 | 要驗證記憶改動的效果時 |
+| `RP記憶/實驗與驗證/世界書調度_驗證結果_2026-08-29.md` | 調度改動的三指標實測結果（含已劃掉的錯誤推論與更正框） | 要引用世界書調度的實測數字時 |
+| `RP記憶/實驗與驗證/LearnedSelf實驗_原始記錄_2026-08-29.md` | 三組因果實驗逐則編碼、判準閘門、地板效應與驗證漏洞 | 要設計任何注入實驗之前 |
+| `RP記憶/結案報告/HCDiary修復結案報告_2026-08-24.md` | 2026-08-24 六項修復、三層防線、關鍵位置備忘 | 需要前次修復的脈絡時 |
 
 ### 硬性要求
 
@@ -102,7 +108,12 @@ E2E tests (`tests/frontend/*.e2e.js`, mostly for the macro engine) require the s
 - Windows 下用 python 讀這些資料**必須**帶 `PYTHONIOENCODING=utf-8`，否則 cp950 編碼會炸
 - 擴充改完要 reload：DevTools 開著 + 勾「停用快取」再 F5（`import()` 模組快取，一般重整擋不住）；
   世界書改完要**完全重啟** ST
-- RP 工作文件與素材一律不進版控
+- **ST 開著時不要在 UI 碰被外部改過的世界書**——前端 `worldInfoCache`
+  （`public/scripts/world-info.js:882`）持有舊版，此時在 UI 動任一欄位，
+  `saveWorldInfo` 會把記憶體舊版寫回檔案、抹掉外部改動。先重啟、再碰面板
+- **驗世界書有沒有注入要看實際生成 log，不是 DRY RUN**——DRY RUN 不套用 sticky，
+  看不到真實 prompt 全貌（2026-08-29 實測：同一次生成，實際 9 條 vs DRY RUN 6 條）
+- RP 工作文件與素材一律放 `RP記憶/`、不進版控
 
 <!-- workflow-harness:start -->
 <!-- 由 workflow-harness plugin 自動加入。本區由 plugin 管理，**請勿手改**。升級用 /init-harness、卸載用 /uninstall-harness（v1.x 後期加）。 -->
