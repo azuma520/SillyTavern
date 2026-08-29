@@ -76,8 +76,3 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 ---
 
 ## 待辦
-
-- [構想] [P3] 加日級總覽
-- [bug] [P2] `fallback.py` reconfigure stdout
-- [優化建議] [case-count: 4] fast-track 閾值案例
-- [SOP 候選] [done: 2026-05-19] 2026-05-19 backlog tag 系統設計
