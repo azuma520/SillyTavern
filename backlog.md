@@ -124,6 +124,17 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
   → handoff 20260830 四（A/D 丟球判準腳本初版跑基線得 14/15、期望 13/15。查出是斷句沒把 `「」` 與換行當句界、旁白的「你」被黏進對白問句造成偽陽性——修的是斷句缺陷。修完 13/15 且組別分佈 A3/B5/C5 全中。同時記錄一個**不修**的保守偽陽性，偏誤方向對 positive control 安全）
   → 與已升級的 `CLAUDE.md §驗證前置 Gate` Observation 那一問相鄰但不同：Gate 問「觀察點存不存在」，這條問「儀器準不準、以及誰有權在什麼時候改它」。若累積更多 case，可考慮併入 Gate 而非另立載體
 
+- [SOP 候選] [case-count: 2] 驗證某個訊號「有沒有出現」之前，先確認會產生該訊號的事件真的發生過——否則 log 上的有與無都只代表什麼都沒跑
+  → handoff 20260830 四（A/D 實驗驗 uid 21 注入：使用者貼的 log 結尾是 `--- DONE (DRY RUN) ---`，查聊天檔 swipes 仍為 5 → **當時尚未 swipe**。DRY RUN 在載入聊天時就會跑、不需生成。若採信，會在「注入從未經過真實生成」的狀態下開始收資料）
+  → handoff 20260830 四（**同日鏡像版**：停用 uid 21 後回報「重啟後確認沒有」，查聊天檔 swipes 仍為 10 → 一樣還沒 swipe。上次是拿 DRY RUN 證明「有」，這次是在沒有生成的 console 裡證明「沒有」）
+  → 兩次都是靠**查聊天檔 swipes 數**擋下的、不是靠更仔細讀 log。**在 UI 之外找一個不會騙人的計數器**，比加強判讀可靠
+  → 與已升級的 `CLAUDE.md §驗證前置 Gate` Observation 不同：Gate 問「觀察點存不存在」（設計時），這條問「觀察的那一刻，該發生的事發生了沒」（執行時）
+
+- [SOP 候選] [case-count: 1] 給判讀者（人或 LLM）的示範例句必須與待判材料異場景——範例取自語料等於把答案示範出來，事後分不出一致性是獨立判斷還是 priming
+  → handoff 20260830 四（A/D 盲編碼第一輪，我給編碼者的正例是「你剛才好像跟誰聊得很開心嘛。那是誰啊？」，幾乎是 `10-A` 原句。三人一致判該則為丟球，但有多少來自 priming、本輪分不出來）
+  → 使用者 review 外部包時提的替代句「前面晃了這麼久，說說你都碰到什麼了」幾乎是 `6-A` 原句——**同一個坑差點踩第二次**，保留句型、換場景才解決
+  → 已加機械檢查：範例區不得出現語料常用詞。**這種檢查可以在做包的當下就跑，不必靠人眼**
+
 - [bug] backlog validated writer 只有升級路徑、沒有降級路徑，count 由 5 降為 2 會留下自相矛盾行且 agent 無合法路徑修
   → root cause：`hooks/lib/backlog_mark.py` 三處——`_maybe_atomic_mature`（`:547`）在 N<5 時「unchanged」、不移除既有 mature 標籤；`repair` 的 `remove mature`（`:721`）**無條件**擋下（註解意圖是防「count≥5 卻無 mature」，但沒判斷 count，降級情境被一起擋）；`reconcile_mature`（`:693`）只刷新日期、不移除，且要求先存在 lifecycle-invariant 診斷
   → 症狀：`case-count set: 2` 後留下 `[case-count: 2]` + `[mature: 2026-08-29]` 併存

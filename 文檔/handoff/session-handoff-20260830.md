@@ -300,3 +300,129 @@ Triage 兩條 `[mature: 2026-08-29]` 的 `[SOP 候選]`——一條升級成 `CL
   無論 D 多漂亮都不得宣布成功
 - **不要碰 `injectDiary`**、不要在實驗結束前改 diary 系統
 - 實驗跑完後可考慮：`[case-count:]` 語意混計那條要不要動（會連帶重審 A 條的 5 條證據）
+
+---
+
+## Session 13:24
+
+### 一、本 session 主題
+
+執行 A/D positive control 實驗（掛三個 session 的閘門工作）：新增世界書 uid 21 直白指令、
+D 先 A 後各 swipe 5 則、跑凍結判準判定。實驗跑完並回寫；額外加做盲編碼複核與外部 LLM 包。
+Plan 模式先行、使用者核計畫時擋下兩處過度結論。
+
+### 二、完成事項
+
+**實驗執行（8 步全過）**
+
+- 前置查核：判準腳本 hash `b1e7e0ae…f5d6` ＝凍結值、uid 19/20 皆 `disable: true`、uid 21 不存在
+- **執行前修訂**（早於任何資料）：§八之三-5 判讀分級細化（原表第一格把 p≈0.004 與 p≈0.262
+  放進同一個 ✅、太寬）、§八之三-6 補失敗方向措辭、§六 舊矩陣標作廢。**舊版全部保留作 audit**
+- 世界書：deep-copy uid 19 → uid 21（`constant=true`、`order=150`、`position=4`、`depth=5`），
+  與備份 diff 驗證「只新增 21、既有條目零改動、`originalData` 未動」
+- **注入硬閘門過**：`[WI] Entry 21 activation successful, adding to prompt` 兩行
+  （DRY RUN + 真實各一）、展開物件逐欄核對、`content` 逐字等於 §四 原文；
+  真實輪 9 條 vs DRY RUN 6 條（差額為 sticky）
+- D 組 5 則（swipe 5–9）→ 停用 uid 21 + 完全重啟 → 驗 `Entry 21` **0 行** → A 組 5 則（swipe 10–14）
+- 判定：hash 收資料後複驗仍等於凍結值、基線 `--calibrate` 重跑仍 13/15
+
+**結果**
+
+- **Primary（凍結腳本）：`A_today 4/5` vs `D_today 1/5`，Fisher 單尾 `p = 0.1032` → 方向性訊號**
+- 人工通讀抓到 `10-A` 判準漏判（§九-1 事前預言的陳述句繞法）。**不重算、不改判準**
+- **Secondary（盲編碼，事後加做）**：3 位編碼者 10/10 一致，`A 5/5` vs `D 1/5`、`p = 0.0238`。
+  唯一分歧是 `10-A`。**不取代 primary**
+
+**回寫**
+
+- 設計文件新增 §十（執行結果）、§十一（盲編碼複核），含三處使用者收斂的措辭界線
+- 新建 `AD_PositiveControl_執行紀錄_2026-08-30.md`（程序性證據）、
+  `AD_PositiveControl_正文_2026-08-30.md`（10 則、附 swipe_index + sha256）、
+  `AD_PositiveControl_blind版` / `blind對照表` / `AD_盲編碼_外部LLM包`
+- `CLAUDE.md §驗證前置 Gate` Discrimination 補「這個樣本量有沒有能力判出差異 + n 必須重算」
+- work-map `task-20260830-ad-positive-control` → `DONE`
+- backlog 新開 2 條 `[SOP 候選]`（見四）
+- 驗收節點 2026-09-06 那條**提前結案**：3/3 達標、且 Gate 實際改變了設計
+
+### 三、未完事項 / 接力棒
+
+- [#接力] **外部 LLM 盲編碼未跑**——包已備妥（`AD_盲編碼_外部LLM包_2026-08-30.md`，整份貼過去）。
+  收齊答案前**不要開** `AD_PositiveControl_blind對照表_2026-08-30.md`
+- [#接力] **加 n 到 10 vs 10**：同 checkpoint 各再 5 則。比例維持則 `p = 0.0115` 可結案。
+  成本 20 則 swipe + 兩次重啟。**開跑前先決定判準要不要擴充**（涵蓋 §九-1 繞法）
+  ——那是唯一合法的改尺時機
+- [#接力] **下一輪分級改用判準定義、不用格子列舉**（見四）
+- [#接力] `[case-count:]` 語意混計仍擱置（2026-08-30 使用者裁定）
+- [#接力] `t701`「腳踝褪色紅繩」未查；`角色日记日志_… copy.txt` 可安全刪除
+- [#狀態] `银趴邮轮世界书.json` uid 21 現為 `disable: true`，日常玩不受影響；跑第二輪改回 `false`
+
+### 四、洞見 / 反省
+
+**【紀律接力】**
+
+- **驗證某個訊號「有沒有出現」之前，先確認會產生該訊號的事件真的發生過**——今天犯了兩次
+  （鏡像版：先拿 DRY RUN 證明「有」，再在沒生成的 console 裡證明「沒有」）。
+  **兩次都是靠查聊天檔 swipes 數擋下的，不是靠更仔細讀 log。**
+  已開 `[SOP 候選] [case-count: 2]`
+- **給判讀者的範例句不可取自語料**——第一輪盲編碼我給的正例幾乎是 `10-A` 原句；
+  使用者 review 時提的替代句又幾乎是 `6-A` 原句，**同一個坑差點踩第二次**。
+  已開 `[SOP 候選] [case-count: 1]`
+- **改變比較基準 = 改變整個統計問題，n 必須跟著重算**——已直接補進
+  `CLAUDE.md §驗證前置 Gate` Discrimination 那一行，不另開 backlog（有載體了）
+- **TaskList 連續第二次撈得到 completed task**。backlog `[case-count: 3]` 記的是「撈不到」，
+  **這是第二個反例、不是修復證據**——仍不 bump、不標 done。
+  下次收工若再成功，該考慮 deprecate 那條
+- **事前登記第一次以「擋下錯誤」的形式兌現價值**：「不可只看 DRY RUN」那句昨天寫下時
+  看起來只是囉嗦提醒，今天它擋掉了在未生成狀態下開始收資料
+
+**【當日洞見】**
+
+- **Preflight 的價值不在填滿三欄，在於它逼你在資料產生前改設計**——Discrimination 判「未確認」
+  時真的把成本從 5 則加到 10 則、Observation 查出設計文件引用的判準腳本從未存在
+- **但 Gate 自己也有洞**：它修了對照組、沒重算 n。「強訊號」那格因此近乎不可達，
+  而這在收資料前就算得出來
+- **我的修訂表犯了同型錯**：用**格子列舉**定義「強訊號」，而不是用**判準**（p ≤ 0.05）定義，
+  導致 `A=5/5 × D=1/5`（p=0.024）明明過門檻卻被排除
+- **兩把尺量的不是同一件事**：凍結腳本量代理（問號＋第二人稱）、盲編碼量比較接近構念的操作化。
+  `10-A` 就是分岔點。**兩者都是 proxy，只是離構念遠近不同**
+- **盲編碼不是灌水的證據，在於對稱性**：較寬判準同時套用兩組、編碼者不知分組，結果 D 一則都沒多
+- **「已知的這一個漏判方向保守」≠「真實效果只會更強」**——我們只確定抓到的誤差往哪偏，
+  不能保證沒有未發現的（使用者當場收斂）
+
+### 五、檔案異動
+
+錨來源：SessionStart 時間戳（N=2h）。git log 視窗內無本 session commit。
+
+**版控內（本 session 改動）**
+
+- `CLAUDE.md` — §驗證前置 Gate Discrimination 補樣本量那一問
+- `backlog.md` — 新開 2 條 `[SOP 候選]`（case-count 2 / 1，皆經 validated writer）
+- `驗收節點.md` — 2026-09-06 那條打勾 + 回填 result
+- `workflow-harness/work-map.jsonl` — `task-20260830-ad-positive-control` → `DONE`
+- `文檔/handoff/session-handoff-20260830.md` — 本區塊 append
+
+**未追蹤（備份檔、不進 commit）**
+
+- `workflow-harness/work-map.jsonl.bak_before_ad_done_20260830` 等 3 個 `.bak`
+
+**非版控（`RP記憶/`，整個目錄已 exclude）**
+
+- **新建**：`AD_PositiveControl_執行紀錄_2026-08-30.md`、`AD_PositiveControl_正文_2026-08-30.md`、
+  `AD_PositiveControl_blind版_2026-08-30.md`、`AD_PositiveControl_blind對照表_2026-08-30.md`、
+  `AD_盲編碼_外部LLM包_2026-08-30.md`
+- **改動**：`AD_PositiveControl設計_2026-08-29.md`（§六 標作廢、§八之三-5 執行前修訂、
+  §八之三-6 補失敗方向、新增 §十 與 §十一）
+
+**repo 外**
+
+- `D:/AI/SillyTavern/data/default-user/worlds/银趴邮轮世界书.json` — 新增 uid 21，現為 `disable: true`。
+  兩份備份：`.bak_before_ad_uid21_20260830`、`.bak_before_disable_uid21_20260830`
+- `D:/AI/SillyTavern/data/default-user/chats/银趴邮轮/…jsonl` — swipe 由 5 增為 15（實驗資料）
+
+### 六、下一步建議
+
+- **先跑外部 LLM 盲編碼**（成本最低）——包已備妥、貼三家即可。收齊再開對照表。
+  依使用者的決策邏輯：若外部也得 `A≈5/5 D≈1/5`，代表**先修量測**；若得 `A=4 D=1`，代表**尺沒問題、就是 n 不夠**
+- **再決定加 n**（20 則 swipe + 兩次重啟）。**開跑前必須先定案判準要不要擴充**
+- **分級改用判準定義**：下一輪寫成「p ≤ 0.05 且 A baseline 成立」，不再列舉格子
+- 不建議現在動 `[case-count:]` 語意那條——它會連帶重審多條證據，是獨立工程
