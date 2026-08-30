@@ -78,12 +78,14 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 ## 待辦
 
 - [SOP 候選] [case-count: 1] 診斷系統行為問題前，先盤點所有會影響該行為的輸入來源並量化佔比，再決定從哪下手
-- [SOP 候選] [case-count: 5] [mature: 2026-08-29] 設計驗證前先驗證這個驗證：觀察點存不存在、判準能不能機械判讀、測的是不是你以為的那個東西
+- [SOP 候選] [case-count: 5] [mature: 2026-08-29] [graduated: 2026-08-30, → CLAUDE.md §驗證前置 Gate] 設計驗證前先驗證這個驗證：觀察點存不存在、判準能不能機械判讀、測的是不是你以為的那個東西
   → handoff 20260829 四（八題失憶測驗有兩題失效，答案就在世界書裡，測到的是世界書不是記憶）
   → handoff 20260829 四（世界書驗證：先查出三個 console 觀察點才設計得出可判讀的測試；另查出 4 個會讓測試測出錯誤結論的配置意外）
   → handoff 20260829 四（量禁令洩漏率時拿 617 則 AI 訊息當分母，該角色實際只出現 44 次——分母錯 14 倍，數字讀起來「沒問題」其實是稀釋出來的）
   → handoff 20260829 四（self-model 量表信度極高但測錯構念：三位盲編碼者一致把「泛用大學生人格替換」評為最高分。「測的是不是你以為的那個東西」這一問，儀器再準也擋不住）
   → handoff 20260829 四（Learned Self 實驗差點建在錯前提上：先查 `lastInContextMessageId=1059` 才知道要測的告解室早已掉出 context 358 樓；另兩處——原判準「像不像經歷過一千多樓的她」不可機械判讀、測題問「你記得嗎」測到的是 recall 不是延續）
+  → **evidence 2026-08-30**：5 verified cases / 3 failure classes（觀察點不存在 1、判準不可判讀 1、測錯構念 3）。抽驗 2 條原始出處皆對得上（`handoff:283` 分母錯 14 倍、`handoff:348` context 邊界）
+  → 升級形式：backlog 原句保留作歷史與證據，正式載體放**編譯後**的 Trigger / Action / Boundary，不搬整串案例
 - [bug] [done: 2026-08-29] 角色卡開場白與世界書禁令互相矛盾：范婼慧開場白說「刚才远远看见还他妈以为是看错了」，世界書「絕對避免」寫著「他媽…不是她的詞彙」。修法是改開場白那一句；影響的是每一場**新聊天**的起手（現有 1226 樓那場開場白早已滾出 context）
   → 2026-08-29 量測：她在場 381 則裡禁用詞命中 4 則（≈1%），其中 1 則就是這句開場白（簡體、角色卡帶的，非模型生成）；允許詞「靠/哎呀」命中 182 則（≈48%），禁令大致有效
   → 通則：開場白是每場新聊天最權威的範例——它是「她說過的話」不是設定，具體範例會打贏抽象禁令（規律三）
@@ -96,13 +98,41 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
   → handoff 20260829 四（我拿日記推出「角色內部形成了某條學習規則」，但 `injectDiary=false`、日記從未回到 RP，兩條鏈沒有箭頭相連。使用者當場擋下。日記能當指標，不能當解釋）
   → handoff 20260829 六（外部意見提出把 Diary 當 Influence 探針、擴充成 Storage→Injection→Influence→Expression。方向可用，但**成立前提是 `injectDiary` 保持 false**——一旦打開，RP 與 Diary 之間就有回饋路徑，Diary 立刻失去旁證資格。這條 SOP 從「別這樣解釋」升級成「這個工具的有效條件」）
 
-- [SOP 候選] [case-count: 5] [mature: 2026-08-29] 引用前一個 session 寫下的前提之前，先驗證那個前提本身——繼承來的結論不會因為是自己寫的就免檢
+- [SOP 候選] [case-count: 5] [mature: 2026-08-29] [deprecated: 2026-08-30, reason: case-count 5 不實、僅 2 件可稽核證據；已重開誠實計數新條目、本行留作 evidence audit 紀錄] 引用前一個 session 寫下的前提之前，先驗證那個前提本身——繼承來的結論不會因為是自己寫的就免檢
+  → **audit 2026-08-30**：本條在 `b92d5e7be` 一次性以 count 4 開出、僅附 1 條證據子彈行，`2a72f3418` bump 至 5 並加第 2 條——5 這個數字沒有 5 條可稽核證據。發現路徑：升級前跑 evidence audit，`git log -p -- backlog.md`
+  → 因 validated writer 無降級路徑（見本檔最末 `[bug]` 條），改以「廢舊行 + 開誠實計數新行」達成，**不是默默改數字**。證據子彈行已移至下方新條目
+
+- [SOP 候選] [case-count: 2] 引用前一個 session 寫下的前提之前，先驗證那個前提本身——繼承來的結論不會因為是自己寫的就免檢
   → handoff 20260829 六（`LearnedSelf實驗_設計` 寫「A 組＝沒有告解室的版本、是現狀」，我原封不動抄進諮詢材料。外部 agent 指出 A 其實是「沒有顯式記憶、但保有數百則行為接力」的版本，不是 counterfactual。錯誤在上個 session 產生、在本 session 被放大成對外文件）
   → **與 `[優化建議]` 話講太滿那條同源但不同病**：那條是「講超過證據」，這條是「沒檢查繼承的前提」
   → handoff 20260829 四（**這次照做了、抓到兩個**：handoff 留的 D 組候選「先淡化再多說」正是基線本來就在做的事，用它當 positive control 等於保證測不出來；handoff【當日洞見】的「15/15 都拍墊子邀你坐」機械掃描後是 13/15、#13 完全沒有）
+  → **observation（不計入 count）2026-08-30 triage**：要引用舊條的 `[case-count: 5]` 決定升不升級，引用前先查 git log，發現 5 無 5 條可稽核證據。結構完全吻合本 pattern，且把適用範圍從「散文前提」擴展到「機器可讀 metadata 前提」。**但不計入 count**：它由 triage 動作誘發、非自然發生（若今天沒排到 triage，大概率直接讀 5 就往下走），計入等於讓 triage 自己餵養升級門檻。2026-08-30 使用者裁定不算
 
 - [優化建議] [case-count: 4] 把「在這個條件下觀察到 X」寫成「X 就是這樣」——陳述前先問這個結論的有效範圍多大
   → 前三次記於 handoff 20260829（含「詮釋會錯而痕跡不會」被使用者擋下）
   → handoff 20260829 六（我寫「近期 context 支配力遠大於新增世界書條目」。正確範圍是「**在這個 probe 下**，近期 context 剛好備有『玩太兇』的現成材料」。不可一般化成「世界書永遠撬不動 177 則 context」。**第 4 次，且這次是被外部 agent 擋下、不是使用者**——模式一樣：把條件句寫成全稱句）
 
-- [優化建議] [case-count: 2] `/end-session` 第一步的 `TaskList` 撈不到本 session 的 completed task（回 "No tasks found"），完成事項每次都得從 context 重建——Guardrail A4 要求跑 TaskCreate，但收工端接不到它的產物
+- [優化建議] [case-count: 3] `/end-session` 第一步的 `TaskList` 撈不到本 session 的 completed task（回 "No tasks found"），完成事項每次都得從 context 重建——Guardrail A4 要求跑 TaskCreate，但收工端接不到它的產物
+
+- [優化建議] [case-count: 1] `[case-count:]` 在數什麼未定義：混計「違反 pattern」與「遵守 pattern」，導致一條**越有效**的規則越快到 5、越快觸發升級 surface——計數器方向與它要衡量的東西（值不值得升級）不一致
+  → 2026-08-30 triage 發現。實例：「引用前一 session 前提前先驗證」條的第 2 條證據明寫「**這次照做了、抓到兩個**」，遵守被計為 case
+  → 連帶待審：已判定證據充足的「設計驗證前先驗證這個驗證」5 條 case 是否也混了「照做」型
+  → 附帶提案（**尚未律定**）：只計自然發生的 case；triage / 複盤 / 週報等「正在檢視這條規則」時誘發的觀察記為 observation、不計入
+  → 2026-08-30 使用者裁定：先擱著不追，避免拖成大工程擠掉 A/D 實驗
+
+- [SOP 候選] [case-count: 1] 量測工具寫完要先用已知答案校準；校準不符時修工具的缺陷、不是把參數調到吻合，且校準完就凍結（hash / commit）不得在看到新資料後再改
+  → handoff 20260830 四（A/D 丟球判準腳本初版跑基線得 14/15、期望 13/15。查出是斷句沒把 `「」` 與換行當句界、旁白的「你」被黏進對白問句造成偽陽性——修的是斷句缺陷。修完 13/15 且組別分佈 A3/B5/C5 全中。同時記錄一個**不修**的保守偽陽性，偏誤方向對 positive control 安全）
+  → 與已升級的 `CLAUDE.md §驗證前置 Gate` Observation 那一問相鄰但不同：Gate 問「觀察點存不存在」，這條問「儀器準不準、以及誰有權在什麼時候改它」。若累積更多 case，可考慮併入 Gate 而非另立載體
+
+- [bug] backlog validated writer 只有升級路徑、沒有降級路徑，count 由 5 降為 2 會留下自相矛盾行且 agent 無合法路徑修
+  → root cause：`hooks/lib/backlog_mark.py` 三處——`_maybe_atomic_mature`（`:547`）在 N<5 時「unchanged」、不移除既有 mature 標籤；`repair` 的 `remove mature`（`:721`）**無條件**擋下（註解意圖是防「count≥5 卻無 mature」，但沒判斷 count，降級情境被一起擋）；`reconcile_mature`（`:693`）只刷新日期、不移除，且要求先存在 lifecycle-invariant 診斷
+  → 症狀：`case-count set: 2` 後留下 `[case-count: 2]` + `[mature: 2026-08-29]` 併存
+  → 2026-08-30 triage 遇到。繞道方案：舊行蓋 `[deprecated:]` + 另開誠實計數的新行
+
+- [構想] 驗證前置 Gate 第二層：把 Preflight 做成 harness 的狀態轉移條件（contract 定義 + hook 最小機械 enforcement），沒過 gate 就不能往下走
+  → **刻意延後**（2026-08-30 使用者裁定）：等「這條規則被證實真的有幫助」或「確定現行規範層需要 hook 輔助」時才開發。理由——現在直接設計 enforcement，等於在一個還沒跑過的流程上做 gate，違反規則自身
+  → 已查證的設計約束：`hooks/hooks.json` 只有 `SessionStart` / `Stop` / `PreToolUse`(`Edit|Write`) 三個掛點；ST UI 裡 swipe 跑實驗**不產生任何 hook 事件**，gate 掛不到「執行前」。可機械擋的位置是**結果被兌現前**（寫結論 / 寫 `[graduated:]` 都是檔案寫入）
+  → 現成範本：`hooks/backlog_write_guard.py`（PreToolUse 真 gate、官方 `permissionDecision: "deny"` 契約、目標未確認 fail-open / 確認後 fail-closed、薄殼 + 純 lib 分層）
+  → 已知漏洞：「是不是 decision-bearing validation」是自我宣告，而要防的失敗模式正是 agent 沒認真想——擋在兌現端可緩解（兌現動作客觀可辨識，不依賴事前宣告）
+  → hook **只做機械 enforcement**（三欄有沒有填），內容合不合理由 agent / reviewer 判斷——不可讓 LLM 判「你寫得對不對」，那本身又是個未驗證的儀器
+  → 屬 plugin capability 變更，走 opsx change、不走 direct PR

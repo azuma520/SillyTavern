@@ -115,6 +115,34 @@ E2E tests (`tests/frontend/*.e2e.js`, mostly for the macro engine) require the s
   看不到真實 prompt 全貌（2026-08-29 實測：同一次生成，實際 9 條 vs DRY RUN 6 條）
 - RP 工作文件與素材一律放 `RP記憶/`、不進版控
 
+## 驗證前置 Gate
+
+> 2026-08-30 由 backlog `[SOP 候選]` 升級（5 件可稽核 case、橫跨 3 種失敗型態）。
+> 這是**規範層**；機械 enforcement（hook）刻意延後，見下方「為什麼現在沒有 hook」。
+
+**觸發條件**：當一個測試 / 實驗 / 量測的結果**將被用來**支持功能判斷、設計決策、規則升級或淘汰時。
+
+**執行前**確認三項，並留下記錄（execution plan 或設計文件裡一個小區塊即可，不必另開長文件）：
+
+- **Observation**——預定觀察的訊號確實存在且可取得。（先去把觀察點找出來，不要假設它在）
+- **Discrimination**——判準能區分預期差異，避免地板 / 天花板效應或純主觀判讀。
+- **Construct**——測量結果確實對應要驗證的問題，而不是代理變數或另一個構念。
+
+任一項無法確認時，**先修正驗證設計，不得把測試結果升格為功能結論**。
+
+**邊界**：低成本、完全可逆、結果不拿來做決定的 exploratory probe / smoke test 不適用。
+規則只掛 decision-bearing validation，不掛所有「動手前」。
+
+**引用既有數字前先跑 evidence audit**：case 數可追溯嗎？每個 case 真的是同一 pattern 嗎？
+原始出處找得到嗎？（衍生狀態如 `[case-count:]` / `[mature:]` **不可**直接當證據用）
+
+### 為什麼現在沒有 hook
+
+2026-08-30 查證：`hooks/hooks.json` 只有三個掛點——`SessionStart`、`Stop`、`PreToolUse` matcher `Edit|Write`。
+本專案主要的驗證（在 ST UI 裡 swipe）**不產生任何 hook 事件**，gate 掛不到「執行前」那個時刻。
+可機械擋的位置是**結果被兌現前**（寫結論 / 寫 `[graduated:]` 都是檔案寫入）。
+第二層 enforcement 待「這條規則被證實有幫助」或「確定需要 hook 輔助」時再開 opsx change。
+
 <!-- workflow-harness:start -->
 <!-- 由 workflow-harness plugin 自動加入。本區由 plugin 管理，**請勿手改**。升級用 /init-harness、卸載用 /uninstall-harness（v1.x 後期加）。 -->
 

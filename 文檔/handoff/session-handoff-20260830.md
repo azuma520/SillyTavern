@@ -156,3 +156,147 @@
   升級成 CLAUDE.md「驗證前置 Gate」，triage 前先確認現況、別重複升級
 - **人工判讀 20-30 則校準代理指標**（低優先）——要把誤觸發的 85.6% 上界收成真值、
   才好定 `cooldown`
+
+---
+
+## Session 11:57
+
+### 一、本 session 主題
+
+Triage 兩條 `[mature: 2026-08-29]` 的 `[SOP 候選]`——一條升級成 `CLAUDE.md §驗證前置 Gate`、
+一條因證據不實降級重開；接著用這條剛升級的 Gate 對 A/D positive control 跑**第一次 Validation Preflight**。
+實驗本身未跑（依使用者決定留到下個 session），但事前登記已全部寫死。
+
+### 二、完成事項
+
+**Triage（Evidence Audit → Pattern Gate → Compile → Graduate → Acceptance）**
+
+- **A 條「設計驗證前先驗證這個驗證」evidence audit 通過**：5 條證據子彈行齊備，
+  抽驗 2 條原始出處對得上（`handoff:283` 分母錯 14 倍、`handoff:348` context 邊界），
+  且橫跨 3 種失敗型態（觀察點不存在 1 / 判準不可判讀 1 / 測錯構念 3）
+- **A 條升級**：編譯成 Trigger / Action / Boundary 三問 Gate（Observation / Discrimination / Construct）
+  寫入 `CLAUDE.md §驗證前置 Gate`（放 harness sentinel 區段**之上**、避免被 `/init-harness` 改寫）；
+  backlog 原句與 5 條案例保留作歷史，正式載體只放編譯後條文
+- **開驗收節點**（due 2026-09-06）：acceptance 明寫「驗**規則有沒有被執行**、不是實驗有沒有成功」
+  ——D 組推不動、實驗判 null 仍可達標
+- **B 條「引用前一 session 前提前先驗證」evidence audit 未通過**：`git log -p` 查出該條在
+  `b92d5e7be` 一次性以 count 4 開出、僅附 1 條證據，`2a72f3418` bump 至 5 加第 2 條。
+  **count 5、可稽核證據 2**
+- **B 條降級**：舊行蓋 `[deprecated: 2026-08-30]` 留作 audit 紀錄、另開誠實計數新行（`case-count: 2`），
+  證據子彈行移至新行。**不是默默改數字**
+- **裁定今天這次「發現 count 不實」不計入 B 的 case**：理由是**誘發性**（由 triage 動作誘發、
+  非自然發生），計入等於讓 triage 自己餵養升級門檻。已寫成不計數的 observation 子彈行
+
+**Validation Preflight（Gate 的第一次實戰，三欄各抓到一件事）**
+
+- **Observation**：設計文件寫「與基線用完全相同的腳本判定」，查出**該腳本從未存在**。
+  補寫 `RP記憶/工具/丟球判準.py`，用已知答案校準 → 13/15 ✅
+  且組別分佈 A3/B5/C5 與設計文件記載全中
+- **Discrimination 判定「未確認」→ 依 Gate 規定當場改設計**：pooled 基線 13/15 混三組，
+  A 組單獨僅 3/5。D=0/5 對 pooled p=0.0014（顯著）、對 A-only p≈0.083（不顯著）
+  ——**結論會因基線取法而翻面**。修法：今天同場加跑 5 則 A，成本由 5 則 swipe 增為 10 則
+- **Construct 收窄措辭**：D 是指令式注入、B/C 是敘事式，`k≤1` 只證明指令通道通。
+  原判讀矩陣「今天的 null 是內容問題」改寫為「也可能是敘事型注入本身不走這條通道，本輪分不開」
+- **實查 uid 19 / 20 皆 `disable: true`**（handoff 遺留的疑慮不成立），uid 21 尚未存在
+
+**事前登記（`AD_PositiveControl設計` §八之三，六項，早於任何實驗資料）**
+
+1. 判準凍結 `sha256=b1e7e0ae…f5d6`，新資料後不得改
+2. 主要基線改為 **A_today**，昨天 pooled 13/15 降為歷史參考
+3. 檢定方向**事前宣告單尾**（單尾 0.083 / 雙尾 0.167，不得事後挑）
+4. 執行順序 `secrets.choice` 丟硬幣得 **D 先**、不重擲（代價：重啟 ST 兩次）
+5. 判讀護欄：**先看今天 A 還在不在，再解釋 D**；A_today 若也只剩 0–1/5 → **不得宣布 D 成功**
+6. Construct 最終範圍：只回答「同一注入位置能不能用一條直接指令推動穩定行為」，不得推出「B/C 內容不好」
+
+**backlog**
+
+- 新開 `[優化建議]` `[case-count:]` 語意混計（count 1）、`[bug]` writer 無降級路徑（含 root cause 三處行號）、
+  `[構想]` Gate 第二層 hook（含已查證的設計約束）、`[SOP 候選]` 量測工具校準與凍結（count 1）
+
+### 三、未完事項 / 接力棒
+
+- [#接力] **A/D positive control 未跑，但 Gate 已過、事前登記已鎖**——
+  下個 session 照 `RP記憶/實驗與驗證/AD_PositiveControl設計_2026-08-29.md` **§八之三**執行
+  （§七的舊步驟已被 §八之三取代）
+- [#接力] **動手前先重算 `丟球判準.py` 的 sha256 比對**
+  （`b1e7e0ae3bd1c048eee9e56d0ce68d3a94b57d5b78811c14448f8a23cb77f5d6`）；
+  `RP記憶/` 在 exclude 內、無法 commit，hash 是唯一凍結證據
+- [#接力] **work-map 的 `task-20260830-ad-positive-control` 描述仍寫「swipe 5 次」**——
+  實際已改為 10 則（D 5 + A 5）。以設計文件為準
+- [#不重議] uid 21 必須 `constant=true`、不可靠 `sticky`（另一 session 查證，見 11:51 區塊）
+- [#不重議] Gate 第二層 hook **刻意延後**，等規則被證實有幫助或確定需要 hook 才開發
+- [#接力] `[case-count:]` 混計「違反」與「遵守」的語意問題**已擱置不追**，但它影響所有
+  `[case-count:]` 的解讀，包括 A 條那 5 條是否也混了「照做」型
+- [#接力] `t701`「腳踝褪色紅繩」未查；`角色日记日志_… copy.txt` 可安全刪除
+
+### 四、洞見 / 反省
+
+**【紀律接力】**
+
+- **升級規則的第一步必須是 Evidence Audit，不能信 `[mature:]` / `[case-count:]` 這些衍生狀態**
+  ——B 條今天就是被這一步擋下的。使用者把它定為 Graduation 流程的固定第一步，
+  已寫進 `CLAUDE.md §驗證前置 Gate` 末條
+- **TaskList 這次撈得到 completed task**（前兩次收工回空、已累積到 `[case-count: 3]`）。
+  **這是一個反例、不是修復證據**——沒有動過任何設定，行為卻不同。
+  下次收工要再觀察一次才知道是間歇性還是已恢復。**沒有 bump、也沒有標 done**
+- **不計入「誘發型」case 這條判準是今天新立的、尚未律定**——寫在 `[優化建議]` 條的提案欄。
+  之後若有第二個 case 再考慮升載體
+- **併行 session 共用 working tree**：`backlog.md` / `work-map.jsonl` 同時含兩個 session 的改動，
+  commit 前必須攤開講清楚、不可默默一起收
+
+**【當日洞見】**
+
+- `[#決策]` **Gate 從「執行前」移到「兌現前」**——查 `hooks/hooks.json` 只有
+  `SessionStart` / `Stop` / `PreToolUse(Edit|Write)` 三個掛點，而在 ST UI 裡 swipe 跑實驗
+  **不產生任何 hook 事件**。gate 掛不到「執行前」那個時刻。可機械擋的位置是結果被兌現前
+  （寫結論／寫 `[graduated:]` 都是檔案寫入）。而且這更忠於條文——觸發條件本來就掛在
+  「結果**將被用來**做決定」，不是掛在測試的執行
+- **harness 的 writer 是 fail-closed 的，今天擋了我一次**：先標 `[graduated:]` 被拒
+  「驗收節點容器找不到對應載體」。**不允許開空頭支票**，必須先有驗收節點才准升級
+- **校準抓到的是斷句缺陷、不是判準爭議**——初版 14/15，查出旁白「…朝你招了招手：」
+  被黏進對白問句「站那麼遠幹嘛？」，讓問句繼承旁白的第二人稱。
+  修 `「」`／換行當句界後 13/15。**分辨「修缺陷」與「調到吻合」的差別是這件事的全部價值**
+- **設計文件自己寫了「本設計最脆弱的假設」然後就放著跑了**——§九-3 早就寫下 A-only 3/5 的問題，
+  但沒有任何機制強迫在執行前處理它。Gate 的作用不是**發現**新問題，
+  是**強迫已經寫下來的問題在執行前被結清**
+- **丟硬幣的代價要當場認**：D 先意味著重啟兩次 ST。若當時選「哪個方便」，
+  就會是 A 先（零世界書改動），而那個理由事後無法與「看了才決定」區分
+- **`[graduated:]` 的配對是載體字串逐字相等**（`verification_parser.py:90`，
+  且 code span 內的引述不算開獎證據）——兩邊差一個字就是真孤兒
+
+### 五、檔案異動
+
+錨來源：SessionStart 時間戳（N=1h）。git log 視窗內**無 commit**。
+
+**版控內（本 session 改動）**
+
+- `CLAUDE.md` — 新增 §驗證前置 Gate（規範層 + 「為什麼現在沒有 hook」的查證記錄）
+- `backlog.md` — A 條標 `[graduated:]` + evidence 註記；B 條舊行 `[deprecated:]` + 新行 `case-count: 2`；
+  新開 4 條（`[優化建議]` ×1、`[bug]` ×1、`[構想]` ×1、`[SOP 候選]` ×1）
+- `驗收節點.md` — 新增 1 條（due 2026-09-06、載體 `CLAUDE.md §驗證前置 Gate`）
+- `文檔/handoff/session-handoff-20260830.md` — 本區塊 append
+
+**併行 session 的改動（本 session 未碰、同在 working tree）**
+
+- `workflow-harness/work-map.jsonl` + 其 `.bak_before_nsfw_sticky_done_20260830`
+- `backlog.md` 的 line 115（`TaskList` 條 case-count 2 → 3）
+- `文檔/handoff/session-handoff-20260830.md` 的 `## Session 11:51` 區塊
+
+**非版控（`RP記憶/`，整個目錄已 exclude）**
+
+- **新建**：`工具/丟球判準.py`（判準腳本、已校準、已凍結 hash）
+- **改動**：`實驗與驗證/AD_PositiveControl設計_2026-08-29.md`（新增 §八之二 Preflight、§八之三 事前登記）
+
+**repo 外**
+
+- 無改動（僅唯讀查 `银趴邮轮世界书.json` 的 uid 18–21 狀態）
+
+### 六、下一步建議
+
+- **下個 session 專做實驗**：照 `AD_PositiveControl設計` **§八之三**的 7 步走
+  （§七已被取代）。動手第一件事是重算判準腳本 hash
+- **順序不可改**：D 先、A 後。這是丟硬幣決定並登記過的，看到 D 結果後不得調整 A 的跑法
+- **判讀第一句話一定是「今天 A 的 baseline 還在不在」**——A_today 若掉到 0–1/5，
+  無論 D 多漂亮都不得宣布成功
+- **不要碰 `injectDiary`**、不要在實驗結束前改 diary 系統
+- 實驗跑完後可考慮：`[case-count:]` 語意混計那條要不要動（會連帶重審 A 條的 5 條證據）
