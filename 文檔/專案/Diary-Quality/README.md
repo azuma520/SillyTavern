@@ -40,3 +40,4 @@ description: 做到什麼算完——日記生成的 prompt 讓模型機械地�
 
 - 2026-09-06 — 專案成立 → [handoff](../../handoff/session-handoff-20260906.md)
 - 2026-09-06 — Step 1 change `diary-include-player-messages` 開立（proposal/design/specs/tasks 齊）；擴充 repo 建 fork 並重整為 main（上游）／running（實跑）結構 → [handoff](../../handoff/session-handoff-20260906.md)
+- 2026-09-06 — Step 1 實作完成並通過 Gate：分支 `diary-player-messages`、commit `63a6537`（已推 `fork`）；Instrument 校準 PASS（ON 玩家樓號 `[1242,1244,1246,1248]` = 獨立算出的預期；OFF 0 筆）、Occurrence 對帳 PASS（metadata sha1 前後同為 `d76560233e1cff84`）；第一組 OFF／ON 材料存 `RP記憶/實驗與驗證/Diary_玩家樓層_OFFON觀測_2026-09-06.md`，**5 組前不判讀** → [handoff](../../handoff/session-handoff-20260906.md)

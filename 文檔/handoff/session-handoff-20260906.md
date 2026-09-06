@@ -367,3 +367,118 @@ Step 1 的 openspec change、依使用者要求查證擴充目錄的 git 身分�
 2. 實作完先做 Instrument 校準（tasks 5.3）與 Occurrence 對帳（5.4），再收第一組 OFF/ON 材料；**5 組前不下結論**
 3. Learned Self 載體討論等日記線凍結再回來；12:01 區塊第 1 條的閱讀順序（MVP設計 §十一、§二）仍適用
 4. 另一 session 說之後不再動擴充 repo；若再有並行 session 要動 `index.js`，先發訊息交接 hash、且對方先 commit 到 `running`
+
+## Session 13:59
+
+### 一、本 session 主題
+
+開工三步驟後選第 1 條建議，跑 `/opsx:apply diary-include-player-messages`（日記品質線 V1 Step 1）。從 `running` 開
+feature branch、改 `index.js` 五個落點、由使用者在 ST UI 手動跑 OFF／ON 成對測試、通過 Instrument 校準與 Occurrence
+對帳、commit 推 fork。20 步完成 19 步（6.3「5 組前不下結論」是跨 session 紀律、不在本 session 收）。ST 實測分工由
+使用者拍板：agent 給逐步中文指令、使用者操作、agent 讀回材料判讀。本 session 仍無任務清單工具（`TaskList` 查無），
+進度以文字追蹤。
+
+### 二、完成事項
+
+**擴充 repo 程式改動（`diary-player-messages` @ `63a6537`，已推 `fork`）**
+
+- 從乾淨的 `running`（HEAD `18f65ed`）開分支；備份 `index.js.bak_include_player_msgs_20260906_1319`（695,843 bytes、CRLF）
+- 設定 `includeUserMessagesInDiary`（預設 `true`）+ 面板開關 `cd-s-includeusermsgs` + 保存區塊三處（223／9332-9333／9573）
+- `cdBuildDiaryPrompt`：玩家樓層擷取（D2 範圍：本批首個 AI 樓層之前最近一個 AI 樓層之後 ~ 本批末個 AI 樓層）、
+  行格式改 `[#樓號 Player／名字]`／`[#樓號 Assistant／名字]`（兩態皆用）、sys 加玩家角色名與中性資料說明兩行（761-786、822-835）
+- `cdTestDiary`：`window.__cdLastDiaryTest` + 「测试 [日记] 完整材料」全量 log（3190-3230）
+- `git diff running` 稽核：7 個 hunk 全落在 `DEFAULT_SETTINGS`／`cdBuildDiaryPrompt`／`cdTestDiary`／`cdRenderSettings`，
+  **mood 歸一段（另一 session 的 `38dd3ec`）零觸碰**；`node --check` PASS
+
+**驗證（使用者在 ST UI 執行、agent 判讀）**
+
+- **Instrument 校準 PASS**：`tools/calc_expected_floors.py` 從聊天檔獨立算出預期玩家樓號 `[1242,1244,1246,1248]`，
+  ON 態實測完全相符；OFF 態 `Player` 行 0 筆。校準後未再改記錄程式
+- **Occurrence 對帳 PASS**：測試前後聊天檔 metadata 行 sha1 皆 `d76560233e1cff84`；`processedFloors` 381、`lastFloor` 1241、
+  日記篇數（徐婷婷 0／范婼慧 50／蘇芮萱 3）全部未變 → 測試路徑確實不寫入
+- **玩家日記防線**：兩態 `npcs` 皆只有「范婼慧」，不含玩家名「宇璽」
+- **記憶抽取差異**：本批兩態的「已知角色名单」與「已有记忆」段逐字相同 → 本組差異確實只有玩家行（**非通則**）
+- 面板開關重載後狀態保留（5.2 後半）
+
+**文件與登記**
+
+- 觀測檔 `RP記憶/實驗與驗證/Diary_玩家樓層_OFFON觀測_2026-09-06.md`（第 1 組、標明尚未判讀）；
+  原始 json 存 `RP記憶/實驗與驗證/材料/diary-player-messages/`；校準腳本存 `RP記憶/實驗與驗證/tools/`
+- `design.md` Risks 補一條：`diaryCharFilter=true` 時 scene 會流向 `cdCaptureCast`，ON 態可能連帶改變記憶抽取
+- `文檔/專案/Diary-Quality/README.md` Changelog 加一行；`tasks.md` 19/20 勾選
+- backlog 新開兩條 `[SOP 候選] [case-count: 1]`（heredoc 反斜線、中間產物下游消費者）
+- `task-20260906-diary-step1-apply` NEXT → DOING（本 session 實際推進、但完成定義含「5 組後盲讀判定」故未結案）
+
+### 三、未完事項 / 接力棒
+
+- [#接力] **收第 2 組 OFF／ON 材料**：`interval=5`，**待處理累積到 3–4 個 AI 樓層時就跑**，等到第 5 樓自動觸發寫入
+  那批就沒有 OFF 對照了。查目前累積幾樓：日誌面板「检查自动触发」或「进度/去重诊断」（不花 token）
+- [#接力] 跑法：關開關 → 应用设置 → 更多 → 日志 → 三路API调试 → 主控台貼下載 snippet → 開開關 → 再跑一次。
+  snippet 與逐步指令在本 session 對話中；校準答案每次都要重跑 `RP記憶/實驗與驗證/tools/calc_expected_floors.py`
+  （批次會隨遊玩改變、舊答案會過期）
+- [#接力] **5 組前不下結論**（tasks 6.3、未勾）；5 組後由使用者盲讀判定，結果決定 Step 2 是否開 change
+- [#接力] 每組都要重驗「兩態記憶段是否相同」——本批相同不代表下批相同，不驗會把差異錯誤歸因到玩家行
+- [#接力] Learned Self 載體討論維持暫停，等日記品質線凍結；`task-20260905-ls-liwe-carrier` 維持 NEXT
+- [#提醒] ST 現在跑的是 `diary-player-messages` 分支的程式，開關預設開 → **自動生成的日記從現在起就會納入玩家發言**。
+  要回退：關開關（行為層）／`git switch running`（程式層）／`.bak`（最後保險）
+- [#待查] 13:08 區塊的 `cdGetData: mood 簡繁歸一` log 缺席原因（不影響本線）
+- [#附帶] 模型回傳文字本身含 `{"npcs":[`、prefill 也是，拼起來成 `{"npcs":[{"npcs":[…`。`parseDiaryJson` 目前吃得下，
+  屬既有行為、非本次改動造成，先記著不動
+
+### 四、洞見 / 反省
+
+**【紀律接力】**
+
+- 昨天剛升級進 CLAUDE.md 的驗證前置 Gate（Instrument／Occurrence）本 session **有**被套用、而且是**先做**才收資料：
+  Instrument 用 python 從聊天檔獨立算出預期玩家樓號當已知答案、校準後不再改記錄程式；Occurrence 用 metadata sha1
+  前後對帳確認零寫入。這是 backlog「剛升級成規範的規則同 session 沒擋住」（`[case-count: 4]`）的**反例**——
+  差別在這次隔了一天，且工作型態正落在它的射程內
+- 13:16 區塊的接力「動 `index.js` 前先 `git branch --show-current`」本 session 第一個動作就是它，通過；
+  `.bak` 已被擴充 repo 的 `.gitignore` 收掉，備份與 git 分支兩層並存互不干擾
+- 新接力：**測試路徑要在待處理累積到 3–4 樓時跑**。`interval=5`，第 5 個 AI 樓層一出現就自動觸發寫入、
+  那批就沒有 OFF 對照了。後續 4 組材料都受這個時間窗約束
+
+**【當日洞見】**
+
+- [#反] 引號 heredoc 在本環境仍會改寫反斜線——用 `<< 'PYEOF'` 傳 python patch script，字面跳脫序列被轉成真換行，
+  anchor 連兩次匹配失敗。同 session 前兩個不含反斜線的 patch 都一次過，差別只在這。改用檔案寫入工具即通過。
+  已開 `[SOP 候選] [case-count: 1]`
+- [#反] 改中間產物前沒先列下游消費者——日記 `scene` 加了玩家樓層，實作時才查到 `scene` 還餵給 `cdCaptureCast`，
+  ON 態多出的玩家原話可能改變登場捕獲名單、連帶改變注入的記憶段。design 原本宣稱「兩態唯一差異是玩家行」並不完整，
+  已補進 Risks。本批實測兩態記憶段逐字相同、沒踩到，但**那是這批的事實不是通則**，每組都要重驗。
+  已開 `[SOP 候選] [case-count: 1]`
+- [#正] tasks 2.2 寫「面板列放注入區（`cd-s-diarycharfilter` 附近）」，實作時改放「生成内容」群組並當場說明理由
+  （這個開關管的是寫日記的材料、不是注入給主模型的內容）。偏離規格時說出來，比默默照做或默默改掉都好
+- [#反] 給 UI 操作指令時混用英文介面名稱（Network／Disable cache／Console），使用者說「用中文說好嗎 我怕我做錯
+  而且我是中文介面」。我把自己讀程式碼的語境當成使用者的語境——對方要照著點的是他螢幕上的字、不是我腦裡的字。
+  連帶漏講「擴充面板是簡體字」這件會讓人以為壞掉的事
+
+### 五、檔案異動
+
+**擴充 repo（`D:/AI/SillyTavern/public/scripts/extensions/third-party/character-diary`）**
+
+- 分支 `diary-player-messages`（自 `running` `18f65ed`），commit **`63a6537`**，已推 `fork/diary-player-messages`
+- `index.js` — 54 insertions / 1 deletion（7 hunk：`DEFAULT_SETTINGS`、`cdBuildDiaryPrompt` ×2、`cdTestDiary` ×2、`cdRenderSettings` ×2）
+- `index.js.bak_include_player_msgs_20260906_1319` — 備份（`.gitignore` 已收，不進 commit）
+
+**版控內（elephantfish，本 commit）**
+
+- `openspec/changes/diary-include-player-messages/tasks.md` — 19/20 勾選
+- `openspec/changes/diary-include-player-messages/design.md` — Risks 新增「ON 態記憶抽取可能不同」
+- `backlog.md` — 新開 `[SOP 候選] [case-count: 1]` ×2（各含 prose + 邊界行）
+- `workflow-harness/work-map.jsonl` — `task-20260906-diary-step1-apply` NEXT → DOING
+- `文檔/專案/Diary-Quality/README.md` — Changelog 加一行
+- `文檔/handoff/session-handoff-20260906.md` — 本區塊
+
+**未進版控（`RP記憶/` 目錄級 exclude）**
+
+- `RP記憶/實驗與驗證/Diary_玩家樓層_OFFON觀測_2026-09-06.md` — 新建（第 1 組觀測）
+- `RP記憶/實驗與驗證/材料/diary-player-messages/cd_diary_test_{OFF,ON}_*.json` — 原始材料
+- `RP記憶/實驗與驗證/tools/calc_expected_floors.py` — Instrument 校準腳本
+
+### 六、下一步建議
+
+1. 正常遊玩累積第 2 組材料，**待處理到 3–4 樓時**跑 OFF／ON（別等到 5，第 5 樓會自動觸發把批次吃掉）
+2. 5 組齊了才盲讀判定，結果決定 Step 2（overlap ＋ 資料塊職責說明）要不要開 change
+3. Learned Self 載體討論維持暫停，等日記品質線凍結
+4. 每組材料進來時，除了校準與對帳，記得多驗一項「兩態記憶段是否相同」——這是本 session 新發現的歸因風險

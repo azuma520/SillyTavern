@@ -65,6 +65,7 @@
 - [模型為玩家寫日記] → system 已有「不要为用户/玩家角色写日记」，本改動再加玩家名明示；OFF／ON 對照時檢查 `npcs` 是否出現玩家名。
 - [玩家訊息含 OOC 或指令語句被當劇情] → 本聊天玩家樓層無標籤、中位 14 字；套用 `filterTags` 後風險與 AI 樓層相同。若觀測到，屬 Step 2 以後的資料身分問題，不在本步加規則。
 - [OFF 態與改動前 prompt 不逐字相同（D3）] → 明示於 spec；歷史日記不重跑、不當基線。
+- [ON 態的「已有記憶」段可能與 OFF 態不同（2026-09-06 實作時揭露）] → `s.diaryCharFilter` 為 true（使用者現值）時，`cdCaptureCast(scene, data)` 以整段 scene 全文比對角色名，ON 態多出的玩家原話會讓捕獲名單可能多出角色，連帶改變注入的「登場角色近期日記」。因此兩態的差異嚴格說是「玩家行 + 其引發的記憶抽取差異」，不只玩家行。行首格式改動本身不影響捕獲（比對不依賴行首）。判讀時 OFF／ON 兩份都要連同 `usr` 全文一起看，不能只看日記輸出就歸因到玩家行。
 - [擴充 repo 的 `origin` 是上游作者、本地 commit 無處可推] → 已建 fork，`running` 已推上 `fork/running`；feature branch 完成後也推到 `fork`。rollback 為關開關（行為層）、切回 `running`（程式層）、還原 `.bak`（最後保險）。
 
 ## Migration Plan
