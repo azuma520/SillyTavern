@@ -10,7 +10,7 @@ SillyTavern is an LLM frontend for power users: a Node.js Express server (`src/`
 
 ```bash
 npm install               # install server deps (post-install also syncs default content)
-npm run start             # start server (node server.js), serves http://127.0.0.1:8000
+npm run start             # start server (node server.js), serves http://127.0.0.1:8500 (this checkout sets `port: 8500` in config.yaml; upstream default is 8000)
 npm run debug             # start with --inspect
 npm run start:no-csrf     # start with CSRF disabled (needed for some local testing)
 npm run lint              # eslint over src/, public/, root *.js
@@ -25,7 +25,7 @@ Tests live in `tests/` with their own `package.json` — install and run from th
 cd tests
 npm install
 npm run test:unit         # Jest unit tests (*.test.js in tests/)
-npm run test:e2e          # Playwright (*.e2e.js), expects a running server at http://127.0.0.1:8000
+npm run test:e2e          # Playwright (*.e2e.js), expects a running server at http://127.0.0.1:8500 (see port note above)
 npm test                  # both
 ```
 
@@ -106,6 +106,14 @@ E2E tests (`tests/frontend/*.e2e.js`, mostly for the macro engine) require the s
 ### 硬性要求
 
 - **改 `index.js` 前先備份**（`index.js.bak_<原因>_<時間戳>`），改後跑 `node --check`
+- **`character-diary` 擴充目錄本身是獨立 git repo，動手前先確認分支**（2026-09-06 整理；路徑 `D:\AI\SillyTavern\public\scripts\extensions\third-party\character-diary\`，ST 主 repo 忽略整個 third-party）：
+  - remote `origin` = 上游作者 `zhaoyichan/SillyTavern-Plugin-HCDiary`；remote `fork` = `azuma520/SillyTavern-Plugin-HCDiary`
+  - **`main`** 追 `origin/main` = 純上游（當日 v2.13.0）。**只看不 checkout**——checkout 會讓正在跑的 ST 直接載到新版
+  - **`running`** 追 `fork/running` = 實際在跑的 v2.7.6 + 本地修補（`2e07c0e` / `38dd3ec` / `aa95e16`）。**所有自用開發的基底**
+  - feature branch 一律 `git switch -c <name>` **從 `running` 開**、完成後 `git push -u fork <name>`；回退走 git（切回 `running`），`.bak` 備份照做但只當保險
+  - 要貢獻上游：從最新 `main` 另開 PR branch，把已驗證 commit 移植過去、在新版重測、再從 fork 對上游 PR。**不拿 `running` 直接 PR**（差 45 commit、`index.js` 約 8,700 行）
+  - 多 session 同時改：先讓對方 commit 到 `running` 再開分支；改前 `git status` 必須乾淨
+  - 分支策略同步記在該 repo 的 `DEVELOPMENT.md`、`RP記憶/RP記憶系統_設計基礎.md`「資料在哪」
 - **改世界書前先備份**，改後驗證 JSON 可解析
 - `data.js` / `engine.js` / `api.js` / `prompts.js` 只是源碼切片，**改它們不生效**，必須改 `index.js`
 - Windows 下用 python 讀這些資料**必須**帶 `PYTHONIOENCODING=utf-8`，否則 cp950 編碼會炸

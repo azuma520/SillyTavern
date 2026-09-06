@@ -261,3 +261,109 @@ Session 開工：跑開工三步驟（`/work-status` → 讀 20260905 最新區�
 2. 日記品質線由 elephantfish-03 在跑，開工前先看它今天的 handoff 區塊，**不要**兩邊同時改 `index.js`；要改就先發訊息交接 hash
 3. 擴充 repo 只在 `running` 上工作；`main` 是純上游、不 checkout
 4. 若要修 CLAUDE.md 的 8000 → 8500，順便把「擴充目錄是獨立 git repo、`.bak` 只當保險」補進硬性要求那段
+
+## Session 13:16
+
+### 一、本 session 主題
+
+開工三步驟後選「開始 Learned Self 設計討論」，讀完設計文件與 LIWE 程式碼後，使用者貼入一份第三方「日記管線優化」討論共識，
+拍板**先做日記品質、再談 Learned Self 載體**。本 session 做了四件事：對照共識與程式碼／實際聊天檔、登記「日記品質線 V1」並開
+Step 1 的 openspec change、依使用者要求查證擴充目錄的 git 身分（推翻「版控外」前提）、建 fork 並把擴充 repo 重整為三線結構。
+另一 session（elephantfish-48）同時在同一份 `index.js` 修 mood 歸一，全程以跨 session 訊息協調。本 session 無任務清單工具可用
+（ToolSearch 查無），進度以文字追蹤。
+
+### 二、完成事項
+
+**設計討論與查證（無程式改動）**
+
+- 對照第三方共識與 `character-diary` v2.7.6 程式碼、銀趴郵輪 Branch #7 聊天檔：**checkpoint 早已存在**（`_lastDiaryChatLength` /
+  `processedFloors` / `lastFloor`，只在批次成功後推進、失敗走 FIX-2 回滾）；**每篇實讀 5 個 AI 樓層**（最近九次生成逐次對帳），40 只是積壓上限；
+  **日記從未讀過玩家樓層**（篩選 `!m.is_user`，已處理集合 381 樓中玩家樓層 0；玩家訊息中位 14 字、AI 644 字、AI 開頭固定轉述玩家動作）
+- 使用者逐項拍板：A 納入玩家樓層做成開關預設開；兩步驗證（Step 1 玩家樓層 OFF/ON、Step 2 overlap＋職責說明合一）；
+  **不加**「轉述不算第二次發生」硬規則、改中性資料說明；行格式 `[#樓號 Player／名]`／`[#樓號 Assistant／名]`；玩家樓層不進已處理集合
+
+**登記與文件**
+
+- `文檔/專案/Diary-Quality/`（`task-20260906-diary-quality`、DOING、掛主線）：README 含 In/Out of Scope；
+  `討論共識_2026-09-06.md` 存共識原文＋三條查證註記
+- `文檔/專案/Learned-Self/README.md` Out of Scope「不修窗口機制」改寫為「日記管線改動另立工作線」
+- openspec change **`diary-include-player-messages`** 四份 artifact 齊（proposal / specs 六條需求 / design 七決策＋五問 Gate 驗證設計 / tasks 六組）
+
+**擴充 repo（`D:/AI/SillyTavern/public/scripts/extensions/third-party/character-diary`）**
+
+- 查證：目錄本身是 git repo、`origin` = 上游作者、使用者無 fork、上游已到 **v2.13.0**（差 45 commit、`index.js` 約 8,700 行）
+- 建 fork `azuma520/SillyTavern-Plugin-HCDiary`（remote `fork`）；本地 `main` 改名 **`running`** 推上 `fork/running`；
+  新建本地 `main` 追 `origin/main`（**未 checkout**）
+- 依使用者指示代為 commit 另一 session 的 mood 歸一改動 **`38dd3ec`**；對方另加 `aa95e16`（`.gitignore`）由本 session 推上；
+  本 session 加 **`18f65ed`**（`DEVELOPMENT.md` 記分支策略）。`running` HEAD = `18f65ed`、與 `fork/running` 一致、工作樹乾淨
+- 分支策略同步寫進 `CLAUDE.md` 硬性要求、`RP記憶/RP記憶系統_設計基礎.md`「資料在哪」、記憶檔 `character-diary-git-identity`
+- `CLAUDE.md` 的 ST port 8000 → 8500（13:08 區塊接力項，`config.yaml` 實為 8500）
+
+**backlog**
+
+- 「剛升級成規範的規則同 session 沒擋住」`[優化建議]` bump 3 → 4（本 session 的「版控外」誤判）
+- 新開 `[SOP 候選] [case-count: 1]`「外部設計文件的程式現況前提採用前先對照程式碼」
+
+### 三、未完事項 / 接力棒
+
+- [#接力] **下個 session 跑 `/opsx:apply diary-include-player-messages`**（leftover `task-20260906-diary-step1-apply` NEXT）。
+  第一步：在擴充 repo 確認 `git branch --show-current` 為 `running`、`git status` 乾淨、HEAD `18f65ed`，再 `git switch -c diary-player-messages`；備份 `.bak`；改完 `node --check`
+- [#接力] Step 1 驗證設計在 design.md「驗證設計」節：Instrument 先用 python 算出預期玩家樓號集合校準、Occurrence 用 `processedFloors` 長度對帳、
+  **5 組 OFF/ON 前不下結論**、盲讀由使用者做
+- [#接力] Step 2（overlap＋職責說明）等 Step 1 觀測結果再開第二個 change；N 值與三塊標籤措辭屆時定
+- [#接力] Learned Self 載體討論**暫停**、等日記品質線凍結（凍結前 Learned Self 不動）；`task-20260905-ls-liwe-carrier` 維持 NEXT
+- [#待查] 13:08 區塊的 `cdGetData: mood 簡繁歸一` log 缺席原因（不影響本線）
+- [#提醒] 擴充 repo `main` 是純上游，**任何 session 都不得 checkout**；上游 v2.13.0 動到 `processedFloors` 與首次總結邏輯，日記線之後若要參考上游改法看 `main`
+
+### 四、洞見 / 反省
+
+**【紀律接力】**
+
+- 20260905 五條接力本 session 觸發兩條：「有專用寫入器的欄位不要用 Edit 改」全程遵守（bump／set／update／settle 全走 writer）；
+  「多數一致不等於正確」以另一形式出現：第三方共識三位討論者一致認定「需新增 checkpoint」「每篇讀 40 輪」，對照程式碼兩者皆非事實
+- 13:08 區塊的新接力（同 worktree 兩 session 動同一份 `index.js`）本 session 是另一半：靠跨 session 訊息交接 hash／備份名／行號，
+  最後由本 session 依使用者指示代為 commit 對方改動並推 fork，沒有踩到彼此
+- 新接力：擴充 repo 三線結構已寫進 CLAUDE.md 硬性要求，之後任何 session 動 `index.js` 前先 `git branch --show-current`，
+  在 `running` 或其 feature branch 才能動；`main` 只看不 checkout
+
+**【當日洞見】**
+
+- [#反] 我也犯了 Occurrence 搜尋層同型錯誤：把 `index.js` 寫成「版控外、`.bak` 是唯一回退」進 proposal/design，只憑外層 gitignore、
+  沒跑 `git rev-parse`。與 13:08 區塊那件是兩個 session 各自獨立犯同一件，「剛升級成規範的規則同 session 沒擋住」bump 至 4
+- [#正] 使用者要求「先查證再定 rollback」擋下了它，而且查證連帶翻出更大的事：上游已到 v2.13.0、差 45 commit、8,700 行。
+  若照「版控外」做下去，fork 建好那一刻才會撞到
+- [#反] 第三方共識兩個前提與程式碼不符（checkpoint 已存在、每篇實讀 5 樓非 40），照原文做會重做已有機制；對照後 V1 縮成三件，
+  並查出共識沒看到的問題：日記從未讀過玩家樓層。新開 `[SOP 候選]`「外部設計文件的程式現況前提採用前先對照程式碼」
+- [#正] 兩步分組（玩家樓層獨立、overlap 與職責說明合一）由使用者定調：單變因防的是「一次改多個機制假設」，不是「每行 prompt 拆一個變因」
+- 建 fork 時 GitHub 拿上游最新 `main`，push 被拒是預期行為不是故障；差距大時 force-push 會混掉兩種語義，改名分支才是對的
+
+### 五、檔案異動
+
+**版控內（elephantfish，本 commit）**
+
+- `CLAUDE.md` — 硬性要求加「擴充目錄是獨立 git repo／三線結構」一段；port 8000 → 8500
+- `backlog.md` — bump ×1、新開 `[SOP 候選]` ×1（含 prose 兩行）
+- `workflow-harness/work-map.jsonl` — 新增 `task-20260906-diary-step1-apply`（NEXT，掛 diary-quality）
+- `文檔/專案/Learned-Self/README.md` — Out of Scope 改寫 + Changelog
+- `文檔/專案/Diary-Quality/README.md`、`討論共識_2026-09-06.md` — 新建
+- `openspec/changes/diary-include-player-messages/` — proposal / design / specs / tasks / .openspec.yaml 新建
+- `文檔/handoff/session-handoff-20260906.md` — 本區塊
+
+**擴充 repo（`running`，皆已在 `fork/running`）**
+
+- `38dd3ec` index.js + DEVELOPMENT.md（mood 歸一，另一 session 實作）、`aa95e16` .gitignore（另一 session）、`18f65ed` DEVELOPMENT.md 分支策略（本 session）
+
+**未進版控**
+
+- `RP記憶/RP記憶系統_設計基礎.md`「資料在哪」加三行分支策略（目錄級 exclude）
+- 記憶檔 `~/.claude/projects/D--AI-SillyTavern/memory/character-diary-git-identity.md` 新建 + MEMORY.md 索引行
+
+（本 session 未改 `index.js` 程式邏輯、未改世界書、未操作 ST。）
+
+### 六、下一步建議
+
+1. **`/opsx:apply diary-include-player-messages`**（現算下一步已是它）。開工先核對擴充 repo：`running`、乾淨、HEAD `18f65ed`；
+   tasks.md 1.1 起走。改動落點 `cdBuildDiaryPrompt`（746）、`cdTestDiary`（3142）、設定預設值、面板列（9291）、保存區塊（9524）
+2. 實作完先做 Instrument 校準（tasks 5.3）與 Occurrence 對帳（5.4），再收第一組 OFF/ON 材料；**5 組前不下結論**
+3. Learned Self 載體討論等日記線凍結再回來；12:01 區塊第 1 條的閱讀順序（MVP設計 §十一、§二）仍適用
+4. 另一 session 說之後不再動擴充 repo；若再有並行 session 要動 `index.js`，先發訊息交接 hash、且對方先 commit 到 `running`

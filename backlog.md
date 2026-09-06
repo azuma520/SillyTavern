@@ -77,6 +77,9 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 
 ## 待辦
 
+- [SOP 候選] [case-count: 1] 第三方設計共識／外部設計文件裡關於「程式現況」的事實前提，採用前先逐條對照程式碼與實際資料，再定 V1 範圍——共識常把已存在的機制寫成待新增、把上限寫成常態
+  → handoff 20260906 四（使用者貼入的日記管線共識有兩個前提與程式碼不符：「需新增 checkpoint」而 `_lastDiaryChatLength`/`processedFloors`/`lastFloor` 早就存在且只在成功後推進；「每篇讀 40 輪」而實測九次生成每次恰 5 個 AI 樓層、40 只是積壓上限。照原文做會重做已存在的東西；對照後 V1 範圍縮成三件，並多查出一個共識沒看到的問題：日記從未讀過玩家樓層）
+  → **邊界**：只掛「將決定實作範圍」的外部文件；純理念討論不必逐條對照。與 CLAUDE.md「引用既有數字前先跑 evidence audit」同源、但對象是外部文件的事實陳述而非 backlog 計數
 - [SOP 候選] [case-count: 1] 同一個 worktree 跑多個 session 時，git 管不到的檔案（gitignore／exclude 裡的，例：`character-diary/index.js`）沒有任何合併保護——改它之前先用跨 session 訊息交接 hash 與備份檔名、改完再通知，讓對方在現況之上改而不是拿舊副本蓋回
   → handoff 20260906 四（mood 修好後發現另一 session 同時在同 worktree 開日記品質線、目標同一個 index.js；用跨 session 訊息交接 hash／備份名／改動行號，對方回覆會在現況之上改、改動區段不重疊）
 - [SOP 候選] [case-count: 2] 給盲任務的指示一律用正面表述——「不要做 X」形式的禁令本身就洩漏了 X 存在
@@ -198,7 +201,7 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 - [SOP 候選] [case-count: 1] 一個動作若會讓自己從此非盲，先把所有依賴盲性的下游決策寫死並凍結，再做那個動作——順序決定證據價值，而順序不用花錢
   → handoff 20260905 四（原排程是先開第二輪質性 mapping、再寫第三輪事前登記。改為先凍結登記（sha256 542fa2a6）再開 mapping。開完發現機械層與質性層獨立指向同一個 probe（C 組）——而登記檔已在不知情下為 C 組寫死單獨門檻。順序反過來的話，那個門檻就變成「看過答案才補的」）
 
-- [優化建議] [case-count: 3] 剛升級成規範的規則，同一個 session 內就沒擋住同型錯誤——規範層對「當下沒想到要套用它」無能為力，而那正是它要防的失敗模式
+- [優化建議] [case-count: 4] 剛升級成規範的規則，同一個 session 內就沒擋住同型錯誤——規範層對「當下沒想到要套用它」無能為力，而那正是它要防的失敗模式
   → handoff 20260906 四（今天上午把 `Occurrence`（含「搜尋層：沒找遍就宣告不存在」）寫進 `CLAUDE.md §驗證前置 Gate`。
     同一天下午，我只看了 `work_status_register update --help` 就向使用者宣告「writer 不支援改 parent」——
     實際上 `repair --set-parent` 一直都在。**這是搜尋層的逐字複製：宣告一個否定性能力結論，而沒找遍可能空間**）
@@ -210,6 +213,7 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
     在累積到足以回答之前不動作
   → handoff 20260906 四（第 2 件：CLAUDE.md 寫 ST 在 8000、curl 8000 得 000 就向使用者宣告「ST 沒在跑」，config.yaml 其實是 8500、ST 正開著——又是 Occurrence 搜尋層「沒找遍就宣告不存在」，離規則寫進 CLAUDE.md 不到一小時）
   → handoff 20260906 四（第 3 件、同 session：只查外層 git 的 gitignore 就斷定 `character-diary/index.js`「不在版控裡」、據此告訴使用者 worktree 隔離不到；該目錄自己就是 git repo，是另一 session 查出來的）
+  → handoff 20260906 四（第 4 件、另一 session elephantfish-03、同日：把 `character-diary/index.js` 寫成「版控外、`.bak` 是唯一回退」進 openspec proposal/design，只憑外層 gitignore 沒跑 `git rev-parse --show-toplevel`；使用者要求先查證再定 rollback，一查是獨立 repo、且上游已到 v2.13.0。兩個 session 各自獨立犯同一件：規範層對「沒想到要套用」的失效率再添一筆）
 
 - [SOP 候選] [case-count: 1] 給判讀者（人或 LLM）的示範例句必須與待判材料異場景——範例取自語料等於把答案示範出來，事後分不出一致性是獨立判斷還是 priming
   → handoff 20260830 四（A/D 盲編碼第一輪，我給編碼者的正例是「你剛才好像跟誰聊得很開心嘛。那是誰啊？」，幾乎是 `10-A` 原句。三人一致判該則為丟球，但有多少來自 priming、本輪分不出來）
