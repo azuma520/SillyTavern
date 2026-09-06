@@ -77,6 +77,8 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 
 ## 待辦
 
+- [SOP 候選] [case-count: 1] 同一個 worktree 跑多個 session 時，git 管不到的檔案（gitignore／exclude 裡的，例：`character-diary/index.js`）沒有任何合併保護——改它之前先用跨 session 訊息交接 hash 與備份檔名、改完再通知，讓對方在現況之上改而不是拿舊副本蓋回
+  → handoff 20260906 四（mood 修好後發現另一 session 同時在同 worktree 開日記品質線、目標同一個 index.js；用跨 session 訊息交接 hash／備份名／改動行號，對方回覆會在現況之上改、改動區段不重疊）
 - [SOP 候選] [case-count: 2] 給盲任務的指示一律用正面表述——「不要做 X」形式的禁令本身就洩漏了 X 存在
   → handoff 20260905 四（本 session 三處洩漏全是我自己寫的禁令：「不要分類或歸群」「不要給出分組名單」「不要猜測生成方式」；另加標題帶家名）
 - [SOP 候選] [case-count: 1] 新增一條約束之後，逐條檢查既有要求會不會因此變成無法滿足
@@ -186,8 +188,9 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
   → **代價對照**：前三次擋下的成本是幾則資料或一次誤判；這次沒擋下，成本是一整輪實驗設計
     （換靶、寫兩份事前登記、建四個 branch、收 9 則資料）。**同一條規則在不同層級的漏接，代價差一個數量級**
 
-- [bug] `character-diary` 日記的 `mood` 欄位簡繁未歸一——同一情緒被存成兩個 key（實測 `开心` 25 篇 vs `開心` 12 篇、`紧张`/`緊張`、`平静`/`平靜`）。prompt 的列舉值是簡體，但模型會跟隨劇情語言輸出繁體，落庫時未正規化。任何對 mood 做統計或篩選的功能都會少算一半
+- [bug] [done: 2026-09-06] `character-diary` 日記的 `mood` 欄位簡繁未歸一——同一情緒被存成兩個 key（實測 `开心` 25 篇 vs `開心` 12 篇、`紧张`/`緊張`、`平静`/`平靜`）。prompt 的列舉值是簡體，但模型會跟隨劇情語言輸出繁體，落庫時未正規化。任何對 mood 做統計或篩選的功能都會少算一半
   → handoff 20260905 四（Diary audit：范婼慧 50 篇，8 個列舉值實際只出現 5 種，「開心」合計 74%。設計基礎記載「簡繁歸一」是本地既有修復之一，但顯然沒蓋到 mood 這格）
+  → 2026-09-06 已修（程式層）：`index.js` 加 `cdNormalizeMood`（情緒用字的繁→簡字表），掛在三個寫入點（mergeDiaries／編輯器儲存／重生成替換）+ `cdGetData` 讀取時就地歸一既有資料。校準：14 條已知答案全過；真實聊天檔 8 個 jsonl 共 424 筆 mood，歸一前 8 個 key → 後 5 個，總數對帳一致。備份 `index.js.bak_mood_normalize_20260906_122359`。運行層已驗（ST 8500 重載後）：記憶體 `diaries['范婼慧']` 50 筆全簡體、硬碟同檔仍 15 筆繁體，差異只可能來自本次歸一。`cdGetData: mood 簡繁歸一` 那行 log 在 console 沒看到，原因未查（不影響判定）
 
 - [SOP 候選] [case-count: 1] 一個欄位若有專用寫入器，就不要用 Edit / 字串替換去改它——寫入器維護的不變式不在你手上，繞過它不是省一步，是把檔案改成不合法狀態
   → handoff 20260905 四（我用字串替換把 backlog 的 `[case-count:]` 由 4 改 5、繞過 `backlog_mark.py`。走 writer 時達 5 會在同一交易自動補 `[mature:]`，手改沒補，lifecycle-invariant 破了、此後**所有**普通寫入被拒；是收工跑 list 診斷才發現，需用 `repair reconcile_mature` 才修得回）
@@ -195,7 +198,7 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 - [SOP 候選] [case-count: 1] 一個動作若會讓自己從此非盲，先把所有依賴盲性的下游決策寫死並凍結，再做那個動作——順序決定證據價值，而順序不用花錢
   → handoff 20260905 四（原排程是先開第二輪質性 mapping、再寫第三輪事前登記。改為先凍結登記（sha256 542fa2a6）再開 mapping。開完發現機械層與質性層獨立指向同一個 probe（C 組）——而登記檔已在不知情下為 C 組寫死單獨門檻。順序反過來的話，那個門檻就變成「看過答案才補的」）
 
-- [優化建議] [case-count: 1] 剛升級成規範的規則，同一個 session 內就沒擋住同型錯誤——規範層對「當下沒想到要套用它」無能為力，而那正是它要防的失敗模式
+- [優化建議] [case-count: 3] 剛升級成規範的規則，同一個 session 內就沒擋住同型錯誤——規範層對「當下沒想到要套用它」無能為力，而那正是它要防的失敗模式
   → handoff 20260906 四（今天上午把 `Occurrence`（含「搜尋層：沒找遍就宣告不存在」）寫進 `CLAUDE.md §驗證前置 Gate`。
     同一天下午，我只看了 `work_status_register update --help` 就向使用者宣告「writer 不支援改 parent」——
     實際上 `repair --set-parent` 一直都在。**這是搜尋層的逐字複製：宣告一個否定性能力結論，而沒找遍可能空間**）
@@ -205,6 +208,8 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
     本 case 提供的是**反向證據**——規則有幫助（對照組），但只在被想起時有幫助
   → **邊界**：本條不是主張「所有規則都要 hook」。它要問的是「規範層的失效率有多高、值不值得為此付 enforcement 的成本」，
     在累積到足以回答之前不動作
+  → handoff 20260906 四（第 2 件：CLAUDE.md 寫 ST 在 8000、curl 8000 得 000 就向使用者宣告「ST 沒在跑」，config.yaml 其實是 8500、ST 正開著——又是 Occurrence 搜尋層「沒找遍就宣告不存在」，離規則寫進 CLAUDE.md 不到一小時）
+  → handoff 20260906 四（第 3 件、同 session：只查外層 git 的 gitignore 就斷定 `character-diary/index.js`「不在版控裡」、據此告訴使用者 worktree 隔離不到；該目錄自己就是 git repo，是另一 session 查出來的）
 
 - [SOP 候選] [case-count: 1] 給判讀者（人或 LLM）的示範例句必須與待判材料異場景——範例取自語料等於把答案示範出來，事後分不出一致性是獨立判斷還是 priming
   → handoff 20260830 四（A/D 盲編碼第一輪，我給編碼者的正例是「你剛才好像跟誰聊得很開心嘛。那是誰啊？」，幾乎是 `10-A` 原句。三人一致判該則為丟球，但有多少來自 priming、本輪分不出來）

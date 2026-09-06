@@ -190,3 +190,74 @@ Session 開工：跑開工三步驟（`/work-status` → 讀 20260905 最新區�
 3. **不要**在設計討論裡讓 Learned Self 的資料模型去配合 Diary 或 Relation 現成管線（凍結起點 ③）
 4. 若動 `character-diary`，**先讀** `Diary_Audit_能否當LearnedSelf上游_2026-09-05.md`，
    尤其 `diaryCharLimit=2` 那個「窄視窗同時造成看不到長程變化 + 製造複製污染」的兩難
+
+## Session 13:08
+
+### 一、本 session 主題
+
+修 `character-diary` 日記 `mood` 欄位簡繁未歸一（backlog `[bug]`、開工建議第 2 條）。使用者要求開 worktree 做，
+但目標檔在外層 gitignore 裡、worktree 隔離不到，改走 `.bak` 備份 + 直接改主 checkout。
+修完後發現同 worktree 有另一 session（elephantfish-03）同時在開日記品質線，協調走跨 session 訊息。
+本 session 未跑 TaskCreate——該工具在本 session 不可用（ToolSearch 查無），非漏跑。
+
+### 二、完成事項
+
+- **mood 簡繁歸一（程式層）**：`index.js` 新增 `CD_MOOD_T2S` 字表 + `cdNormalizeMood()`（只覆蓋情緒用字、非通用簡繁轉換），
+  掛在三個寫入點（`mergeDiaries` 落庫／編輯器儲存／重生成替換）+ `cdGetData` 讀取時對既有 `diaries[*].mood` 就地歸一。
+  校準：14 條已知答案全過；真實聊天檔 8 個 jsonl 共 424 筆 mood，歸一前 8 個 key → 後 5 個、總數對帳一致
+- **運行層驗證**：ST（**8500 埠**、非 CLAUDE.md 寫的 8000）重載後，記憶體 `diaries['范婼慧']` 50 筆全簡體、硬碟同檔仍 15 筆繁體，
+  擴充內沒有其他程式動這個欄位 → 差異只可能來自本次歸一。`cdGetData: mood 簡繁歸一` 那行 log **沒在 console 看到、原因未查**
+- backlog 第 189 行 `[bug]` 走 writer 標 `[done: 2026-09-06]`；條目下加兩行 prose 註記（修法 / 驗證方式 / log 缺席）
+- 擴充 DEVELOPMENT.md 依該檔規定追加修復日誌；`RP記憶/RP記憶系統_設計基礎.md` §六「簡繁 contract 不一致」計數四次 → 五次
+- **擴充 repo**（`character-diary/` 是獨立 git repo，本 session 中途才知道）：mood 改動由 elephantfish-03 依使用者指示 commit 為 **`38dd3ec`**（branch `running`、已 push 到 fork）；
+  我另加 **`aa95e16`**（`.gitignore` 忽略 `index.js.bak_*`，由 elephantfish-03 一併 push 到 fork/running）。備份檔 `index.js.bak_mood_normalize_20260906_122359` 留著當額外保險
+- backlog：「剛升級成規範的規則同 session 沒擋住」`[優化建議]` bump 1 → 3（兩件新 case 見四）；新開 `[SOP 候選] [case-count: 1]`「同 worktree 多 session 時 git 管不到的檔案靠訊息交接」
+
+### 三、未完事項 / 接力棒
+
+- [#接力] **擴充 repo 分支結構已改**（elephantfish-03 依使用者拍板）：`running` = 實際跑的版本（本地修補 + mood 歸一）、`main` = 純上游 v2.13.0
+  **只看不 checkout**（index.js 差 8,700 行，checkout 會讓開著的 ST 載到新版）。之後自用開發從 `running` 開 feature branch
+- [#待查] `cdGetData: mood 簡繁歸一` log 為何沒出現在 console（驗證已由資料對帳成立，此項只影響可觀測性）
+- [#接力] 硬碟上的聊天檔要等下一次 `cdSaveData` 才會把繁體 mood 寫成簡體；讀取路徑已歸一、統計已正確，不需手動遷移
+- [#接力] CLAUDE.md 寫 ST 在 `http://127.0.0.1:8000`，實際 `config.yaml` 是 8500——文件與設定不一致，下次改 CLAUDE.md 時順手修
+
+### 四、洞見 / 反省
+
+**【紀律接力】**
+
+- 20260905 五條接力本 session 觸發兩條、皆為遵守型：「量測工具自己會有 bug」→ `cdNormalizeMood` 先過 14 條已知答案 + 真實聊天檔 424 筆對帳才上線；
+  「有專用寫入器的欄位不要用 Edit 改」→ done / bump / set 全走 writer。其餘三條原樣往後帶
+- 新接力：同 worktree 有另一 session（elephantfish-03）在跑日記品質線，兩邊都會動 `character-diary/index.js`；該目錄是獨立 git repo（對方發現的），協調走跨 session 訊息
+
+**【當日洞見】**
+
+- [#反] **Occurrence 搜尋層同型錯誤、同一 session 兩件**：① CLAUDE.md 寫 8000、curl 8000 得 000 就宣告「ST 沒在跑」，config 其實 8500；
+  ② 只查了外層 git 的 gitignore 就斷定 `index.js`「不在版控裡」，沒查目錄自己有沒有 `.git`。「剛升級的規則同 session 沒擋住」那條已 bump 至 3
+- [#正] **Occurrence 用對一次**：log 沒出現時沒去更用力讀 console，改比對記憶體 vs 硬碟的 mood 分佈當不會騙人的計數器，驗證成立；log 缺席原因未查
+- [#反] 使用者要求開 worktree，但目標檔在外層 gitignore 裡，worktree 隔離不到它——隔離工具只覆蓋它管得到的東西，先查目標在誰的管轄下再選隔離手段
+
+### 五、檔案異動
+
+**版控內（elephantfish）**
+
+- `backlog.md` — `[done:]` ×1、case-count bump ×2、新開 `[SOP 候選]` ×1、prose 註記 ×4
+- `文檔/handoff/session-handoff-20260906.md` — 本區塊
+
+**擴充 repo（`D:/AI/SillyTavern/public/scripts/extensions/third-party/character-diary`，branch `running`）**
+
+- `index.js`（+38/-3）、`DEVELOPMENT.md`（+10）— commit `38dd3ec`（由 elephantfish-03 提交）
+- `.gitignore`（新建）— commit `aa95e16`（兩者皆已在 fork/running）
+
+**未進版控**
+
+- `RP記憶/RP記憶系統_設計基礎.md` §六 計數更新（目錄級 exclude）
+- `index.js.bak_mood_normalize_20260906_122359`（已被 .gitignore 忽略）
+
+（本 session 沒碰的、屬 elephantfish-03 的改動：`文檔/專案/Learned-Self/README.md`、`文檔/專案/Diary-Quality/`、`openspec/changes/`、`work-map.jsonl` 新增 `task-20260906-diary-quality`。）
+
+### 六、下一步建議
+
+1. 回到 12:01 區塊的第 1 條：**開始 Learned Self 載體設計討論**（下一步子項仍是「載體從世界書搬到 LIWE」NEXT）
+2. 日記品質線由 elephantfish-03 在跑，開工前先看它今天的 handoff 區塊，**不要**兩邊同時改 `index.js`；要改就先發訊息交接 hash
+3. 擴充 repo 只在 `running` 上工作；`main` 是純上游、不 checkout
+4. 若要修 CLAUDE.md 的 8000 → 8500，順便把「擴充目錄是獨立 git repo、`.bak` 只當保險」補進硬性要求那段
