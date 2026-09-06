@@ -753,3 +753,161 @@ capability delta、登記三條 bug，並實作觀察模式 UI（tasks 2.4／2.5
 2. 討論完再 `/opsx:archive` 收掉 `diary-include-player-messages`、並依結果定 Step 2 範圍
 3. 若這條線暫時卡在等討論，`Learned Self 開發` 那邊有一條 `NEXT` 掛著：
    **載體從世界書搬到 LIWE**（世界書表達不了 ownership），標明要先與使用者討論設計再動手
+
+## Session 19:05
+
+### 一、本 session 主題
+
+依使用者定的方向做**日記管線四層 read-only audit**（輸入機制／Prompt 職責／輸出欄位與 consumer／
+mechanism-prompt-schema-consumer 分層），產出 11 條問題地圖，回答「Diary 作為 Experience 上游，
+哪些地方還不足以讓我們放心把它交給 Learned Self」。接著收尾 Step 1：兩份 delta spec 同步進主 specs
+（本 repo 首次寫主 specs）、change 歸檔。**本 session 未改任何程式、設定或 RP 資料。**
+
+### 二、完成事項
+
+**四層 audit（`RP記憶/實驗與驗證/Diary_機制與Prompt_Audit_2026-09-06.md`）**
+
+證據基礎：`character-diary` 分支 `diary-player-messages` HEAD `8d19c7f`（工作區乾淨）、
+`settings.json` 的 59 個 key、Branch #12 的 **76 篇日記**與 **248 條 `key_events`**；
+每項統計附對帳（分項合計＝總數），全部 OK。
+
+**新查出的（第一層 · 輸入機制）**
+
+- 一次 Diary 的材料共 7 項，**角色卡完全不是輸入**；`worldbookLink=false` 故世界書未餵入；
+  `focusRoles=[]` 故【重点角色】區塊不出現；`enableRelation`／`enableArchive` 皆 false，那兩路沒在跑
+- 批次邊界：`interval=5`、`memoryOffset=2`、`maxWindowFloors=40`，取 `processedFloors` 之外最早的整批、
+  選定即鎖定。**舊內容進 prompt 的路徑排除 overlap 後只剩 `diaryMemory` 一條**
+
+**新查出的（第二層 · Prompt 職責）**
+
+- **system prompt 的 15 條要求裡，一條都沒有提過「已有記憶」**。`user` 訊息有三個標籤把材料分開，
+  但兩者的責任分工完全靠模型自己猜。狀態不是「講得不夠清楚」，是完全沒講
+- **六個輸出欄位裡有四個零規格**（`secret`／`key_events`／`attitude_to_user`／
+  `relationship_with_others` 在 15 條要求裡一次都沒出現，只存在於 JSON 範本的 placeholder）
+- **沒有留空出口**：JSON 範本把所有欄位列成有值的形狀，無「若無則留空」指示 → `secret` 76/76 全填
+- 一組互相衝突的指示：`mood` 枚舉寫死簡體 ＋「语言: 跟随剧情片段的主要语言」
+
+**新查出的（第三層 · 輸出欄位與 consumer）**
+
+- **`key_events` 248 條中 124 條（50.0%）完全沒有主詞**（19.4% 只在句中帶代名詞、
+  僅 21.0% 開頭點名角色）。Step 1 驗收情境 2 的主詞錯置**不是偶發筆誤，是這個欄位一半時候的狀態**
+- `relationship_with_others` 零讀取點確認（5 個命中點：1 註解、2 prompt 範本、2 寫入）。
+  附帶：key **未經別名正規化**，`大老闆`(5)／`大老板`(6) 簡繁分裂、`宇璽`(32) 疑似同一人拆三個 key；
+  且與 `attitude_to_user` 功能重疊
+- **`is_minor` 存檔時被丟棄**（`:2211` 讀、`:2242-2252` 不寫），76/76 全 `None`
+- **世界書同步是死碼**：本版 ST 無 `getWorldbookNames` 等 API、`worlds/` 下無 `*-日记记忆` 檔案
+
+**P2「不在場角色」升級為 mechanism 問題（含完整因果鏈）**
+
+徐婷婷三篇（t1275／t1285／t1308）全是缺席報告，且 **t1285／t1308 為不在場角色編造了具體內心狀態**
+（「其實想加入他們，只是擔心自己會顯得多餘」）。因果鏈：`cdCaptureCast` 以「被提及」而非「有出場」
+判定 → 該角色近期日記進 `diaryMemory`（內容是「我沒出場」）→ 再寫一篇「我沒出場」→ 又成為下次的
+`diaryMemory`，**自我強化**。prompt 已寫「只为有名字、有实际戏份的角色写」、模型未違反它，**改 prompt 補不了**。
+
+**2026-09-05 四缺陷重驗**
+
+| 舊缺陷 | 現況 |
+|---|---|
+| A · 複製污染 | **部分推翻**——只發生在 t753–t801，之後 55 篇零復發、`secret` 跨篇逐字重複 0 種。設定未變，停止原因未知 |
+| B · 2 篇視窗 | 仍成立（`diaryCharLimit=2` 未變） |
+| C · `secret` 會編造 | 仍成立，且找到結構成因（強制填寫無出口） |
+| D · `mood` | 一半已修（簡繁由 `38dd3ec` 的 `cdNormalizeMood` 歸一）、一半惡化（开心 **78.9%**，前次 74%） |
+
+**責任邊界的逐欄對照**：`attitude_to_user`／`mood`／`relationship_with_others` **三格整格落在
+Interpretation 層，其中兩格沒有 consumer**；`entry` 規格裡的「聚焦…關係變化」也已是跨時間解讀。
+
+**Step 1 收尾**
+
+- 兩份 delta spec 同步進主 specs（`openspec/specs/diary-scene-player-messages/`、
+  `diary-auto-summary-toggle/`）——**本 repo 首次寫主 specs**，該目錄原為空、兩份皆純新增；
+  `openspec validate --all` → 2 passed, 0 failed
+- change 以 `git mv` 移進 `openspec/changes/archive/2026-09-06-diary-include-player-messages/`
+  （6 個檔案全被認成 rename、歷史未斷）；`openspec list` → No active changes found
+
+**登記**
+
+- backlog：既有 3 條補證據（不在場角色升 mechanism／`relationship_with_others` 補別名分裂／
+  Step 1 的 cast 副作用）、新開 6 條（`key_events` 無 actor `[P2]`、`is_minor` 被丟 `[P3]`、
+  prompt 未定義已有記憶、`focusRoles` 潛在編造指令、世界書死碼 `[P4]`，
+  ＋ 兩條流程類：開查前先讀專案自己的文件 `[SOP 候選]`、A4 在無 TaskCreate 環境的判定 `[優化建議]`）
+- work-map：新增 `task-20260906-diary-audit`（DONE）；`task-20260906-diary-step2` 改寫為「候選 A／B 待挑」
+- 專案 README 補一條 Changelog
+
+### 三、未完事項 / 接力棒
+
+- [#接力] **下一個 change 未定**。候選 A ＝ `key_events` actor 契約（prompt+schema、
+  **驗收條件機械可數**：無主詞比例 50%→N%，可在動手前凍結成一個數字）；
+  候選 B ＝ 不在場角色（mechanism、對 LS 上游危害更大，但成功標準難事前釘死）。
+  建議先 A、B 緊接著做。`relationship_with_others` **建議單獨處理**——它是 consumer 問題，
+  正確動作是「決定留不留」而非「改 prompt 讓它更準」
+- [#接力] 使用者擬**先與第三方討論對外版報告**再定 Step 2 範圍（此意向自 18:10 session 延續）
+- [#未完] audit §八 明列**沒做的事**：未逐條判定 `key_events` 歸屬**對錯**（只量了主詞有無與位置）／
+  未驗證執行期 `name1` 值（`settings.json` 無 `name1`、只有 `username='宇璽'`，
+  若執行期為空 prompt 會退化成「玩家角色名：主角」，**要開 console 才能確認**）／
+  未查明複製污染為何在 t801 停止／只讀了 Branch #12，#8–#11 未讀
+- [#提醒] 驗收節點第 58 行（2026-09-20 Instrument 有沒有被執行）**本 session 是期間內一次未達標事件**，
+  見下方反省。節點未到期、未打勾
+
+### 四、洞見 / 反省
+
+**【紀律接力】**
+
+- **Occurrence 規則今天實際擋下一次誤報，而且是新形態。** 我讀到 `cdSyncWorldbook` 每次日記後
+  無條件呼叫、會把 `secret`／`key_events` 寫成**常駐**（`constant`、depth 4、role system）
+  世界書條目並自動綁定角色，已經準備報告「這繞過了 `injectDiary=false`、是一條活的回饋迴路」。
+  查 `worlds/` 目錄與 ST 本體 API 才發現本版根本沒有那組 function。
+  **既有規則講的是「事件沒跑就讀 log」，今天這次是「程式碼路徑存在就當行為發生」**——
+  同一條規則的執行層，但入口不是 log 而是原始碼
+- **昨天那條「不採信 UI 回報、讀檔對帳」今天的形態是「不採信程式碼、查檔案系統」。**
+  兩天的做法一致：找一個不會騙人的計數器。昨天是 `processedFloors`，今天是 `worlds/` 目錄裡
+  有沒有那個檔案
+
+**【當日洞見】**
+
+- [反] **我把專案 README 已經寫著的東西報告成新發現。**「現況為零 overlap」這句話，
+  `文檔/專案/Diary-Quality/README.md` 第 22 行的 In Scope 裡本來就有；README 第 21 行的
+  「資料塊職責說明」也正是我列成 P4 的那件事。**開查之前沒讀這條工作線自己的文件**，
+  結果重新查了一次已知的事，還當成新的報上去。已開 `[SOP 候選]`
+- [反] **寫了量測腳本，但沒做已知答案校準。** `key_events` 主詞分類器是這個 session 新寫的量測工具。
+  我跑了對帳（分項合計必須等於總數）並在 audit 文件裡聲明規則跑前凍結、跑後未調參——
+  **但對帳不是校準**：它只抓得到算術上的漏數，抓不到分類規則本身系統性判錯。
+  驗收節點第 58 行那條要的是 (a) 已知答案校準記錄 ＋ (b) 凍結標記（hash / commit），
+  **(a) 我沒做、(b) 只有散文聲明沒有 hash**。這條節點到 2026-09-20，本次是期間內一次未達標的事件
+- [正] **先讀 2026-09-05 的既有 audit 再開工，省掉大約四成重跑**，並且查出它的輸入描述已被
+  Step 1 改到過時、缺陷 A 的結論要部分推翻。如果直接從零做，這兩件都不會被發現
+- [反／環境] **這個 session 的工具集裡沒有 `TaskCreate`**，Guardrail A4 無法被滿足。
+  昨天的 handoff 把「沒跑 TaskCreate」記成自己違反 A4——**如果昨天也是工具不在，
+  那條反省是歸錯因的**（我無法回溯驗證昨天的工具集）。已開 `[優化建議]`
+
+### 五、檔案異動
+
+**版控內（elephantfish，本 commit）**
+
+- `openspec/specs/diary-scene-player-messages/spec.md` — **新檔**，主 spec（6 個 Requirement）
+- `openspec/specs/diary-auto-summary-toggle/spec.md` — **新檔**，主 spec（2 個 Requirement）
+- `openspec/changes/diary-include-player-messages/` → `openspec/changes/archive/2026-09-06-diary-include-player-messages/`（`git mv`，6 檔）
+- `backlog.md` — 3 條補 `→` 證據行、新開 6 條
+- `workflow-harness/work-map.jsonl` — 新增 `task-20260906-diary-audit`（DONE）；改寫 `task-20260906-diary-step2`
+- `文檔/專案/Diary-Quality/README.md` — Changelog 加一條
+- `文檔/handoff/session-handoff-20260906.md` — 本區塊
+
+**未進版控（`RP記憶/` 整目錄排除）**
+
+- `RP記憶/實驗與驗證/Diary_機制與Prompt_Audit_2026-09-06.md` — **新檔**，四層 audit ＋ 11 條問題地圖
+
+**未進版控（備份）**
+
+- `backlog.md.bak_before_diary_audit_20260906`、`workflow-harness/work-map.jsonl.bak_before_diary_audit_20260906`
+- `文檔/專案/Diary-Quality/README.md.bak_before_audit_20260906`
+- `文檔/handoff/session-handoff-20260906.md.bak_before_1905_append`
+
+**擴充 repo**：**未改任何程式**，僅讀 `index.js`（分支 `diary-player-messages` @ `8d19c7f`，工作區乾淨）
+
+### 六、下一步建議
+
+1. **先與第三方討論對外版報告**（使用者意向，自 18:10 session 延續）。現在多了一份 audit 可以一起談——
+   尤其 `key_events` 50% 無主詞這個數字，把「主詞錯置該不該更嚴重」那個討論問題直接回答掉了
+2. 討論完從問題地圖挑下一個 change。**建議 A（`key_events` actor 契約）優先**，
+   理由是它的驗收條件機械可數、可在動手前凍結成一個數字——這正好對治「判讀界線中途才定」那個弱點
+3. 若日記線卡在等討論，`Learned Self 開發` 的 `NEXT` 仍掛著：**載體從世界書搬到 LIWE**
+   （世界書表達不了 ownership），標明要先與使用者討論設計再動手

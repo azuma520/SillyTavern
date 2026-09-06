@@ -77,10 +77,20 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 
 ## 待辦
 
+- [SOP 候選] [case-count: 1] 對一條已在進行的工作線開查之前，先讀它自己的專案 README／既有文件，把「已經回答過的部分」先標出來——否則會把已記錄的事重新查一次、並當成新發現報給使用者，虛報工作的新穎度
+- [優化建議] Guardrail A4（多步驟工作必跑 TaskCreate）在某些 session 的工具集裡**沒有 TaskCreate 可用**，此時規則無法被滿足、也無法被判定違反。需要的是「工具不在時該怎麼算」的明文，而不是每次都記一筆違規
 - [SOP 候選] [case-count: 1] 凍結判準不等於凍結判讀規則——判準的適用界線（邊界情況算不算觸發）若在判讀中途才定，它會被已看到的資料影響，效果等同事後調整判準
   → handoff 20260906 四（日記 Step 1 驗收：判準收材料前已凍結，但三條適用界線「斷言 vs 猜測」／「摘要 vs 逐字」／「②看心理表現」全在判讀中途才定，其中第一條直接決定否決條件的觸發難度。CLAUDE.md 的 Instrument 只涵蓋量測工具、未涵蓋判讀規則）
 - [bug] [P3] character-diary 日記會**替不在場的角色產生一篇「我沒出場」的日記**。2026-09-06 OFF／ON 對照實測（Branch #12、樓層 #1243–#1255）：OFF 態多產生一篇徐婷婷日記，`entry` 寫「這段時間我沒有出現在泳池派對中，也沒有參與……」、`key_events` 為空陣列、`secret` 還編了一句「希望自己之後仍有機會加入他們的行程」。同批 ON 態沒有這篇。花 token 生成、產出零資訊，且為該角色累積了一筆語意上不存在的記憶
+  → 2026-09-06 audit 補證據並**升級為 mechanism 問題**（`RP記憶/實驗與驗證/Diary_機制與Prompt_Audit_2026-09-06.md` §4.1）：Branch #12 資料裡徐婷婷三篇（t1275／t1285／t1308）全是缺席報告，且 t1285／t1308 **為不在場角色編造了具體內心狀態**（「其實想加入他們，只是擔心自己會顯得多餘」「我大概會好奇宇璽最後究竟選了誰」）——不只是浪費 token，是虛構 Experience 入庫。因果鏈：`cdCaptureCast` 用正則比對名字、命中條件是「文字裡被提及」而非「有出場」 → 該角色近期日記進 `diaryMemory` → 內容是「我沒出場」 → 模型再寫一篇「我沒出場」→ 又成為下次的 `diaryMemory`，**自我強化**。prompt 已寫「只为有名字、有实际戏份的角色写」、模型並未違反它，**改 prompt 補不了**
 - [優化建議] character-diary 日記的 `relationship_with_others` 欄位**每次生成都寫、但沒有任何下游消費者**。查 `index.js` 只有兩處觸及：`:2247` 寫入、`:8700` 編輯時保留，**無任何讀取路徑**；且 `injectRelation` / `enableRelation` 現皆為 `false`。內容品質也不穩：2026-09-06 五組實測中，情境 1 為 `{}`、其餘各異，情境 2 寫「蘇芮萱：熟絡友好的老同學」與該 branch 起點（范婼慧 turn 1241「對她好奇又有些戒備，視作潛在競爭者」）矛盾。要嘛接上消費端，要嘛從 prompt 拿掉
+  → 2026-09-06 audit 補兩項〔料〕：① key **未經別名正規化**——角色 `name` 會走 `mainName` 解析歸併別名，但 `relationship_with_others` 的 key 是模型自由生成原樣存入，范婼慧 49 篇裡出現 `大老闆`(5) 與 `大老板`(6)，**同一詞簡繁存成兩個 key**（與已修的 mood bug 同病）；`宇璽`(32) 另成一 key，而蘇芮萱 t1318 寫「宇璽：新認識但迅速親密的大老闆」→ 疑似同一人被拆成三個 key。② 與 `attitude_to_user` **功能重疊**：玩家在 32 篇裡是關係對象，但玩家態度本就有專欄
+- [bug] [P2] character-diary 的 `key_events` **沒有 actor 槽位、prompt 對它零要求**——15 條 system 要求裡完全沒提這個欄位，模型收到的全部指示是 JSON 範本裡的「关键事件」四個字。實測 Branch #12 的 **248 條 `key_events` 有 124 條（50.0%）完全沒有主詞**（另 19.4% 只在句中帶代名詞、僅 21.0% 開頭點名角色）。這個欄位的預設寫法是省略主詞、由讀者補上「日記主人」——她自己做的事省略是對的，但**當行為者是玩家而主詞被省略時，欄位本身沒有任何機制阻止它被讀成她做的**。2026-09-06 Step 1 驗收情境 2 的主詞錯置不是偶發筆誤，是這個欄位在一半的時候都處在的狀態。`key_events` 是六個欄位裡唯一屬 Experience 核心、最接近結構化資料的一格，Learned Self 要讀的就是它
+  → `RP記憶/實驗與驗證/Diary_機制與Prompt_Audit_2026-09-06.md` §3.2、§4 P1。量測工具界線：分類器只量主詞的有無與位置、**不量歸屬對錯**，規則跑前凍結、跑後未調參
+- [bug] [P3] character-diary 的 `is_minor` **在存檔時被丟棄**。`mergeDiaries`（`index.js:2211`）讀 `npc.is_minor` 決定 `promoted`／`cameo`，但 `index.js:2242-2252` 推入 `data.diaries` 的物件裡沒有這個欄位。實測 76/76 全為 `None`。2026-09-05 audit 記的「0/50 全未標」成因不是模型不輸出、是存檔路徑不保存
+- [優化建議] character-diary 的 system prompt **從頭到尾沒有定義「已有記憶」的角色**。`user` 訊息用三個標籤把材料分開（`已知角色名单`／`各角色已有记忆(最近历史)`／`本次剧情片段`），但 15 條要求裡沒有任何一條說明前者該怎麼用——沒有「已有記憶是背景，不得把其中事件寫成本次發生的事」這類句子。狀態不是「講得不夠清楚」而是**完全沒講**。這是複製污染（2026-09-05 缺陷 A）的結構條件，雖然 t801 之後 55 篇零復發、但條件仍在
+- [構想] character-diary 的 `focusRoles` 一旦非空，prompt（`index.js:861-862`）會**明文要求**「即使这些角色在本次片段中出场较少，也要根据已有记忆与设定，为其补全完整、符合人设的日记」——這是直接指示模型脫離本次劇情證據去編造。目前 `focusRoles=[]` 故未觸發，屬**潛在**高風險。若要用重點角色功能，這段措辭必須先改
+- [bug] [P4] character-diary 的世界書同步（`cdSyncWorldbook`、`index.js:2335`，每次日記成功後於 `:4727` 無條件呼叫）在本版 ST 是**死碼**：`cdEnsureWorldbook` 第一道 `typeof getWorldbookNames !== 'function'` 就 return null，而全 `public/`（排除 third-party）搜不到 `getWorldbookNames`／`createOrReplaceWorldbook`／`rebindCharWorldbooks`／`getCharWorldbookNames` 任何定義，`worlds/` 下也無任何 `*-日记记忆` 檔案。**列為 bug 是因為它是誤判來源**——只讀程式碼會得出「日記有常駐（`constant`、depth 4、role system）世界書回饋迴路、繞過 `injectDiary=false`」的錯誤結論；本次 audit 差點如此宣稱，是查 `worlds/` 目錄與 ST 本體 API 才擋下
 - [bug] [P3] character-diary 的「检查自动触发」按鈕（`cdCheckAutoTrigger`、`index.js:3295`）計數與真實觸發邏輯不一致：它用 `data._baselineChatLength` 當基線且**不**跳過 `processedFloors`，而真正的 `cdOnMessageReceived`（`:4876`）在 v2.7.3 已修成用 `data.lastFloor` 且跳過 `processedFloors`（`:4911`）
   → 該函式的註解仍寫「与 cdOnMessageReceived 一致的逻辑」，是修改前留下的過期註解
   → 後果：使用者拿這個按鈕看「還差幾樓觸發」時，數字可能與實際不符；它是唯一不花 token 的待處理樓層計數器，卻不能當對帳依據（CLAUDE.md §驗證前置 Gate · Instrument）
