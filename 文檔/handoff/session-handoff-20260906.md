@@ -482,3 +482,131 @@ feature branch、改 `index.js` 五個落點、由使用者在 ST UI 手動跑 O
 2. 5 組齊了才盲讀判定，結果決定 Step 2（overlap ＋ 資料塊職責說明）要不要開 change
 3. Learned Self 載體討論維持暫停，等日記品質線凍結
 4. 每組材料進來時，除了校準與對帳，記得多驗一項「兩態記憶段是否相同」——這是本 session 新發現的歸因風險
+
+## Session 15:09
+
+### 一、本 session 主題
+
+討論並**重新收斂日記品質線 Step 1 的驗收設計**：由「同批 OFF／ON 對照累積 5 組 + 盲讀判定」改為
+「ON 態單跑的 solution acceptance + 5 個同起點 branch」。過程中查證 SillyTavern branch 與
+character-diary metadata 的作用域（讀 call path、未改程式），據此更新四份 OpenSpec 產物、新增一份
+capability delta、登記三條 bug，並實作觀察模式 UI（tasks 2.4／2.5，`index.js` 淨增 2 行）。
+未開始任何 branch，實驗本體留給下個 session。
+
+### 二、完成事項
+
+**驗收設計重新收斂（使用者拍板）**
+
+- 廢除 OFF／ON 對照：OFF 是既有原態、缺陷已由 Diary Audit 記錄；機制已由 pilot 驗證。**第 1 組材料降級為 pilot**，
+  只證明 mechanism／measurement，不列入驗收樣本
+- 改為 5 個自然 RP 情境（承諾／拒絕／揭露／請託／具體行動），各在一個從主線最新位置建立的 branch 內演完，
+  先寫 ground truth 再用「补写指定范围」產生真實日記
+- 判準定為**一條主問 + 一條否決**：必要能力（玩家言行／角色回應／因果連結三子項）；
+  否決限縮為「與玩家有關的無證據推論」，並以既有 50 篇 OFF 態日記當幻覺基線
+- 明確不做：採樣器、一鍵雙跑、機械 request diff、隨機順序、A/B 盲化、每情境重複生成、顯著性檢定
+
+**call path 查證（未改程式）**
+
+- character-diary 資料住 `chatMetadata.extensions['character-diary']`（`index.js:1965`／`:2046`），作用域＝單一聊天檔
+- `createBranch`（`bookmarks.js:186`）只傳 `{main_chat}`，`saveChat`（`script.js:7347`）做
+  `{...chat_metadata, ...withMetadata}` → **branch 建立時整份複製、之後各自獨立**（copy-on-create）
+- **分岔後 A 不會污染 B**：載入時 `chat_metadata` 整個替換（`script.js:7598`）、`cdGetData` 無快取、
+  `CHAT_CHANGED` handler 不持有資料
+- 排除三條疑似通道：`worldbookLink` 只讀不回寫（`:850`／`:1106`）、`cdGlobalFavs` 只在收藏 UI 被讀（`:9648`）
+  不參與注入、「跨聊天记忆继承」面板是純說明文字
+- 查出兩個真通道 → 已登記為 bug（見下）
+
+**OpenSpec 產物更新（四改一新，`openspec validate --strict` 通過）**
+
+- `proposal.md`：What Changes 加 `autoSummary` 接線與 ON-only 驗收；Capabilities 加第二項；Impact 加驗收資料段
+- `design.md`：Goals／Non-Goals 重寫；新增 **D8**（沿用既有旗標、兩個設定皆全域、結束必須開回來）；
+  Risks 三條（`cdCaptureCast` 改寫保留、branch 繼承、備份池）；**新增 §驗收流程**；五問全部重寫；Open Questions 換新
+- `specs/diary-scene-player-messages/spec.md`：兩處措辭，**行為契約零改動**
+- `specs/diary-auto-summary-toggle/spec.md`：**新檔**，兩個 Requirement（面板控制與保存、關閉時狀態可見性）
+- `tasks.md`：補勾 6.2；6.3 改 pilot 降級；新增 2.4／2.5；**新增第 7 節驗收**（前置／5 branch／判讀／收尾）
+
+**程式（`diary-player-messages` 分支，`index.js` +2 行，尚未 commit）**
+
+- 備份 `index.js.bak_autosummary_ui_20260906_1456`
+- 面板「运行参数」群組最上方加「自动总结」開關 `cd-s-autosummary`（`${s.autoSummary !== false}`）
+- 保存區塊加 `autoSummary: $('#cd-s-autosummary').is(':checked')`
+- `node --check` PASS；CRLF 完整（11651 CRLF／0 純 LF）；`git diff` 只有 2 個 hunk、都在 `cdRenderSettings`
+- **使用者實測通過**：開關出現、預設開、關閉存檔後重載仍為關
+
+**登記**
+
+- backlog 新開三條 `[bug]`：branch 繼承幽靈 `processedFloors`（P2）、localStorage 備份池不記來源（P3）、
+  「检查自动触发」計數與真實觸發邏輯不一致（P3）
+- backlog L102 `[SOP 候選]` bump 至 `case-count: 2` + prose 註記
+- work-map `task-20260906-diary-step1-apply` 改名（原名寫「同批 OFF/ON 累積 5 組後盲讀判定」已失效）
+
+### 三、未完事項 / 接力棒
+
+- [#接力] **下個 session 從 tasks 7.1 開始**：① 讀主線聊天檔第一行 metadata 確認
+  `lastFloor <= chat.length - 1` 且 `max(processedFloors) <= chat.length - 1`（不符即停手）→
+  ② 關 `autoSummary` → ③ 主線凍結 → ④ 從主線最新位置建 5 個 branch，**全部直接從主線開、不得 A → B**
+- [#接力] 每個 branch 內四步**順序不可調換**：RP → 記樓號 → **先寫 ground truth** → `补写指定范围`。
+  ground truth 寫在讀日記之後就失去全部價值（它是 ON-only 沒有盲讀之後唯一的防污染機制）
+- [#接力] 情境類型不預先綁 branch 順序，自然遇到哪類劃掉一格；遇不到再刻意安排並註記
+- [#接力] **收尾必做 7.4.1：把 `autoSummary` 開回來**。它是全域設定，忘了開主線會從此靜默停止寫日記
+- [#接力] 驗收期間**不使用**擴充的「管理 → 备份/恢复」；**不得**拿「检查自动触发」的計數當對帳依據
+- [#未決] 5 個 branch 演完後哪一個成為正史，使用者暫不處理、不擋 Step 1
+- [#提醒] `index.js` 的 2 行改動與擴充 repo 的 commit 見「五、檔案異動」
+
+### 四、洞見 / 反省
+
+**【紀律接力】**
+
+- backlog L102 那條今天**連中兩次**：提議的「Observation Mode」查下去是既有的 `autoSummary`（只缺 3 行接線）；
+  而我自己先提議的 120–180 行採樣器，之後才查到 `补写指定范围` 早就能做。已 bump 至 `case-count: 2`。
+  **這條的射程不只外部文件——agent 自己的方案同樣適用**，而兩次都是「先查程式」擋下的
+- 昨天的接力「測試路徑要在待處理累積到 3–4 樓時跑」**今天整條作廢**——驗收設計一改，那條操作紀律
+  連同它的時間窗一起失效。接力棒會因上游決策改變而過期，開工讀 handoff 時要先確認它的前提還在，不能照單全收
+- CLAUDE.md 的 Discrimination 今天在**收資料前**發揮作用：算出「n=5 成對只有 5/5 才過 p<0.05、
+  允許平手幾乎必然無定論」，這個算術直接讓設計從 NHST 轉向 solution acceptance。
+  這是規範層在正確時點擋下事情的又一個反例（對照 `[case-count: 4]` 那條「剛升級的規則同 session 沒擋住」）
+
+**【當日洞見】**
+
+- [#正] **行為契約與驗證設計分層存放的價值今天兌現**：驗收方式整個換掉，`spec.md` 只動兩處措辭、
+  五個 Requirement 的行為零改動。當初把驗證設計寫在 `design.md` 而非 `spec.md` 是對的
+- [#反] 我提出大採樣器，是因為把「消滅操作風險」讀成「蓋一個不會出錯的工具」，而使用者要的是「別讓我按錯」。
+  **方案規模該由風險決定，不是由「能做到多完整」決定**
+- [#反] 追 branch 污染時我原本只查了 chat metadata 那一條路就想收；是「還有沒有繞過聊天檔的全域通道」
+  這個追問才查出 localStorage 備份池。**問「還有沒有別條路」比把已知那條路查得更深更有價值**
+- [#正] 幽靈 `processedFloors` 是查 call path 查出來的、不是踩到才發現的，而且它**正好會落在原訂的實驗路徑上**
+  （從歷史 checkpoint 開 branch）。先查再做省下的是一整輪材料
+- [#反] ON-only 帶來一個必須當場處理的推論限制：沒有同批對照，看到幻覺無法歸因給本改動。
+  否決條件因此**收窄成「與玩家有關的編造」**，並改用既有 50 篇 OFF 態日記當幻覺基線。
+  **改掉對照組時，所有靠對照成立的判準都要跟著重寫**，不能只改流程不改判準
+
+### 五、檔案異動
+
+**擴充 repo（`D:/AI/SillyTavern/public/scripts/extensions/third-party/character-diary`）**
+
+- 分支 `diary-player-messages`（自 `63a6537`），`index.js` **+2 行**（`cdRenderSettings` 兩個 hunk：面板列 9321、保存區塊 9562）
+- `index.js.bak_autosummary_ui_20260906_1456` — 備份（`.gitignore` 已收）
+
+**版控內（elephantfish，本 commit）**
+
+- `openspec/changes/diary-include-player-messages/proposal.md` — What Changes／Capabilities／Impact
+- `openspec/changes/diary-include-player-messages/design.md` — Goals／Non-Goals／D8／Risks／§驗收流程／五問／Open Questions
+- `openspec/changes/diary-include-player-messages/specs/diary-scene-player-messages/spec.md` — 兩處措辭
+- `openspec/changes/diary-include-player-messages/specs/diary-auto-summary-toggle/spec.md` — **新檔**
+- `openspec/changes/diary-include-player-messages/tasks.md` — 補勾 6.2、6.3 改寫、新增 2.4／2.5 與第 7 節
+- `backlog.md` — 新開三條 `[bug]`；L102 bump 至 `case-count: 2` + prose
+- `workflow-harness/work-map.jsonl` — `task-20260906-diary-step1-apply` 改名
+- `文檔/專案/Diary-Quality/README.md` — Changelog 加一行
+- `文檔/handoff/session-handoff-20260906.md` — 本區塊
+
+**未進版控**
+
+- `backlog.md.bak_before_branch_bugs_20260906`、`workflow-harness/work-map.jsonl.bak_before_step1_rename_20260906`
+
+### 六、下一步建議
+
+1. 跑 tasks 7.1：確認主線 `lastFloor` / `max(processedFloors)` 未超過 chat 末端 → 關 `autoSummary` →
+   凍結主線 → 建 5 個同起點 branch
+2. 五個情境類型不預先綁 branch 順序，自然遇到哪類就演哪類、劃掉一格；真的遇不到再刻意安排並註記
+3. 每個 branch 內四步順序不可調換：RP → 記樓號 → **先寫 ground truth** → `补写指定范围`
+4. 收尾別忘 7.4.1 **把 `autoSummary` 開回來**

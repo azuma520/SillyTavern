@@ -77,6 +77,21 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 
 ## 待辦
 
+- [bug] [P3] character-diary 的「检查自动触发」按鈕（`cdCheckAutoTrigger`、`index.js:3295`）計數與真實觸發邏輯不一致：它用 `data._baselineChatLength` 當基線且**不**跳過 `processedFloors`，而真正的 `cdOnMessageReceived`（`:4876`）在 v2.7.3 已修成用 `data.lastFloor` 且跳過 `processedFloors`（`:4911`）
+  → 該函式的註解仍寫「与 cdOnMessageReceived 一致的逻辑」，是修改前留下的過期註解
+  → 後果：使用者拿這個按鈕看「還差幾樓觸發」時，數字可能與實際不符；它是唯一不花 token 的待處理樓層計數器，卻不能當對帳依據（CLAUDE.md §驗證前置 Gate · Instrument）
+  → 另有一個較小的問題：`autoSummary === false` 時（`:3298`）直接 return，連計數都不顯示，觀察模式下這個按鈕等於沒用
+  → 2026-09-06 查證（讀 call path、未改程式）。`diary-include-player-messages` 的驗收流程已改為不依賴它（走 `补写指定范围` 指定樓號），故不阻塞
+- [bug] [P2] 從歷史 checkpoint 建 SillyTavern branch 時，chat 內容被截斷但 `chat_metadata` 沒有——`createBranch`（`public/scripts/bookmarks.js:186`）只傳 `{main_chat}` 當 `withMetadata`，`saveChat`（`public/script.js:7347`）做 `{...chat_metadata, ...withMetadata}` 把當前完整 metadata 整份複製進新 branch。結果 character-diary 的 `lastFloor` 與 `processedFloors` 會帶著「該 branch 不存在的未來樓號」，`diaries` 也帶著從未發生的事件
+  → 症狀：`lastFloor` 會被 `cdOnMessageReceived`（`index.js:4893`）的 `baseline > currentLen - 1` 自癒，但 `processedFloors` 不會清；branch 長回那些樓號時被 `cdGetNewFloors:2165` 與 `cdOnMessageReceived:4911` 的 `_pfSet.indexOf(i) >= 0 → continue` 靜默跳過，那批樓層永遠拿不到日記，log 只說「新增AI不足一整批」。繼承來的日記還會被注入，角色「記得」該分支沒發生過的事
+  → 2026-09-06 查證（讀 call path、未改程式）。修法未定：可能是建 branch 後把 `processedFloors` 與 `lastFloor` 依 branch 末端裁切，也可能是擴充在偵測到 `max(processedFloors) > chat.length - 1` 時自癒
+  → **邊界**：只發生在「從落後於 `lastFloor` 的 checkpoint 開 branch」；從主線最新位置開 branch 不會踩到。`补写指定范围`（走 `extraFloors`、`index.js:4405`）繞過 `cdGetNewFloors`，不受此坑影響
+  → **不在 `diary-include-player-messages` 這個 change 修**（2026-09-06 使用者拍板）
+- [bug] [P3] character-diary 的 localStorage 備份池 `cd-data-backups`（`index.js:1926`）跨 chat／branch 共用，但條目只記 `{time, label, diaryCount}`、不記來源聊天或 branch 身分。寫日記（`:4506`）／重新生成（`:8706`）／刪日記（`:8732`）都會推一筆、只留最近 10 筆
+  → 風險：在 branch B 按「管理 → 备份/恢复」（`.cd-bk-restore`、`index.js:10570`）選到其實來自 branch A 的那格，會整組覆蓋 `diaries`／`relations`／`archive`／`liveTable`／`cards`，而列表上兩者外觀完全相同、分不出來
+  → 手動 + confirm 才觸發，不會自動污染，故 P3。緩解：跨 branch 實驗期間不用備份/恢復，要保險走「導出 JSON」（會落成可自行命名的檔案）
+  → 2026-09-06 查證，與上一條同一次 call path 追查
+
 - [SOP 候選] [case-count: 1] 把含反斜線或跳脫序列的內容寫進檔案時走檔案寫入工具、不走 shell heredoc——引號 heredoc 在本環境仍會改寫反斜線，錨點字串在傳輸中就變了形，比對失敗但看不出原因
   → handoff 20260906 四（用 `<< 'PYEOF'` quoted heredoc 傳 python patch script 改 `index.js`，腳本裡的字面跳脫序列被轉成真換行，anchor 連兩次匹配失敗；改用檔案寫入工具寫同一份 patch 即一次通過。同一 session 前兩個不含反斜線的 patch 都成功，差別只在這）
   → **邊界**：只掛「內容含反斜線或跳脫序列」的情形；純文字 heredoc 照用無妨
@@ -84,9 +99,10 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
   → handoff 20260906 四（日記 scene 納入玩家樓層，實作時才查到 scene 還餵給 `cdCaptureCast` 做登場角色捕獲：ON 態多出的玩家原話可能讓捕獲名單改變、連帶改變注入的「已有記憶」段。design 原本宣稱「兩態唯一差異是玩家行」並不完整，已補進 Risks。本批實測兩態記憶段逐字相同、沒踩到，但那是這批的事實、不是通則）
   → **邊界**：掛「該產物會流向 ≥2 個消費者」的改動；函式內部只用一次的中間變數不必
 
-- [SOP 候選] [case-count: 1] 第三方設計共識／外部設計文件裡關於「程式現況」的事實前提，採用前先逐條對照程式碼與實際資料，再定 V1 範圍——共識常把已存在的機制寫成待新增、把上限寫成常態
+- [SOP 候選] [case-count: 2] 第三方設計共識／外部設計文件裡關於「程式現況」的事實前提，採用前先逐條對照程式碼與實際資料，再定 V1 範圍——共識常把已存在的機制寫成待新增、把上限寫成常態
   → handoff 20260906 四（使用者貼入的日記管線共識有兩個前提與程式碼不符：「需新增 checkpoint」而 `_lastDiaryChatLength`/`processedFloors`/`lastFloor` 早就存在且只在成功後推進；「每篇讀 40 輪」而實測九次生成每次恰 5 個 AI 樓層、40 只是積壓上限。照原文做會重做已存在的東西；對照後 V1 範圍縮成三件，並多查出一個共識沒看到的問題：日記從未讀過玩家樓層）
   → **邊界**：只掛「將決定實作範圍」的外部文件；純理念討論不必逐條對照。與 CLAUDE.md「引用既有數字前先跑 evidence audit」同源、但對象是外部文件的事實陳述而非 backlog 計數
+  → handoff 20260906 四（提議中的「Observation Mode：暫停 auto Diary trigger」查下去發現 `autoSummary` 旗標早已存在於 `DEFAULT_SETTINGS:212`、兩個 gate 都已尊重它、且 `cdSaveSettings` 是 merge 所以主控台設一次就持久——「新功能」實際只缺面板接線 3 行。同一場討論裡我自己也犯了一次：先建議寫 120–180 行的一鍵採樣器，之後才查到 `补写指定范围`（`index.js:8310`）早就能指定樓號寫日記。兩次都是把已存在的機制當成待新增）
 - [SOP 候選] [case-count: 1] 同一個 worktree 跑多個 session 時，git 管不到的檔案（gitignore／exclude 裡的，例：`character-diary/index.js`）沒有任何合併保護——改它之前先用跨 session 訊息交接 hash 與備份檔名、改完再通知，讓對方在現況之上改而不是拿舊副本蓋回
   → handoff 20260906 四（mood 修好後發現另一 session 同時在同 worktree 開日記品質線、目標同一個 index.js；用跨 session 訊息交接 hash／備份名／改動行號，對方回覆會在現況之上改、改動區段不重疊）
 - [SOP 候選] [case-count: 2] 給盲任務的指示一律用正面表述——「不要做 X」形式的禁令本身就洩漏了 X 存在

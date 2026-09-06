@@ -9,6 +9,8 @@
 - [x] 2.1 在 `cdGetSettings` 預設物件（約 216 行附近）加 `includeUserMessagesInDiary: true` 並附註解
 - [x] 2.2 在設定面板日記區（約 9291 行 `cd-s-diarycharfilter` 那列附近）加一列 `cds-row` 開關，id `cd-s-includeusermsgs`，依現值勾選
 - [x] 2.3 在保存區塊（約 9524 行）加 `includeUserMessagesInDiary: $('#cd-s-includeusermsgs').is(':checked')`
+- [x] 2.4 觀察模式：在設定面板「处理频率」那列附近加一列 `cds-row` 開關，id `cd-s-autosummary`，依 `s.autoSummary !== false` 勾選；保存區塊加 `autoSummary: $('#cd-s-autosummary').is(':checked')`。**不新增旗標**（`autoSummary` 已存在於 `DEFAULT_SETTINGS:212`，兩個 gate 已尊重它），只接線
+- [x] 2.5 確認關閉狀態下的可見回饋：`cdCheckAutoTrigger:3298` 現有的 `toastr.warning('自动总结已关闭')` 已滿足 spec 的狀態可見性需求，不必新增程式；若實測發現訊息不夠明確再調整文案
 
 ## 3. 日記 prompt 組裝
 
@@ -33,5 +35,42 @@
 ## 6. 交接
 
 - [x] 6.1 在分支上 `git commit`（英文訊息，說明開關、範圍規則、測試路徑記錄），`git push -u fork diary-player-messages`，記下 hash
-- [ ] 6.2 `文檔/專案/Diary-Quality/README.md` Changelog 加一行連到當日 handoff；handoff 記錄分支名、commit hash、備份檔名、diff 落點、校準結果、第一組材料位置
-- [ ] 6.3 觀測累積至 5 組前不下結論；5 組後以盲讀判定，結果決定 Step 2 是否開 change
+- [x] 6.2 `文檔/專案/Diary-Quality/README.md` Changelog 加一行連到當日 handoff；handoff 記錄分支名、commit hash、備份檔名、diff 落點、校準結果、第一組材料位置
+- [x] 6.3 第 1 組 OFF／ON 材料**降級為 pilot**：只證明 mechanism（玩家樓層正確進入材料）與 measurement（測試路徑不寫入），不列入驗收樣本。原「累積 5 組後盲讀判定」設計作廢，改走第 7 節
+
+## 7. 驗收（ON 態單跑、5 個 branch）
+
+判準與流程的權威在 `design.md` §驗收流程；本節只列可勾的執行步驟。
+
+### 7.1 前置（一次）
+
+- [ ] 7.1.1 讀主線聊天檔第一行 metadata，確認 `lastFloor <= chat.length - 1` 且 `max(processedFloors) <= chat.length - 1`。不符即停手回報，不得逕自開 branch
+- [ ] 7.1.2 在設定面板關閉「自动总结」（全域設定，一次對主線與所有 branch 生效）；確認「玩家訊息」開關為開
+- [ ] 7.1.3 主線凍結：從此不在主線寫日記、不推進主線，直到第 7.4 節收尾
+- [ ] 7.1.4 從主線最新位置建立 5 個 branch，全部直接從主線開（**不得** A → B 再分支）。在觀測檔記錄每個 ST branch 名稱（`… - Branch #N`）對應哪一種情境類型
+
+### 7.2 每個 branch（重複 5 次，各一種類型）
+
+類型：承諾／拒絕／揭露／請託／具體行動。
+
+- [ ] 7.2.1 branch #1 承諾
+- [ ] 7.2.2 branch #2 拒絕
+- [ ] 7.2.3 branch #3 揭露
+- [ ] 7.2.4 branch #4 請託
+- [ ] 7.2.5 branch #5 具體行動
+
+每個 branch 內固定四步（順序不可調換）：① 正常 RP 讓該事件自然發生 → ② 記下涵蓋該場景的樓號範圍 → ③ **先寫 ground truth**（玩家實際做了／說了什麼、角色實際如何回應；不提供給日記、必須早於讀日記）→ ④ 用「补写指定范围」對該範圍產生真實日記，並確認 `diaries` 真的多了一篇且 `topFloor` 落在指定範圍內。
+
+### 7.3 判讀
+
+- [ ] 7.3.1 收滿 5 個情境後一次判讀：每組記必要能力三子項（玩家言行／角色回應／因果連結，各 yes/no + 理由）與否決條件（是否新增與玩家有關的無證據推論）
+- [ ] 7.3.2 檢查清單四項（事實正確性、事件完整度、角色內在變化、重複污染）只記錄與描述、不參與判定
+- [ ] 7.3.3 結論以工程證據措辭寫入觀測檔，**不得**宣稱統計證明；依結果決定是否接受 Step 1 並開 Step 2 的 change
+
+### 7.4 收尾
+
+- [ ] 7.4.1 **把 `autoSummary` 開回來**（全域設定，忘了開主線會從此靜默停止寫日記）
+- [ ] 7.4.2 確認 5 個 branch 與判讀結果都已記入 `RP記憶/實驗與驗證/` 的觀測檔；主線後續如何續接由使用者決定
+
+> 驗收期間**不使用**擴充的「管理 → 备份/恢复」（localStorage 備份池跨 branch 不記來源身分，見 design §Risks）；要保險走「導出 JSON」。
+> 亦**不得**拿「检查自动触发」的計數當對帳依據（該計數與真實觸發邏輯不一致，已另案登記）。

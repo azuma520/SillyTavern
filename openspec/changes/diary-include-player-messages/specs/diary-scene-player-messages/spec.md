@@ -27,7 +27,7 @@
 - **THEN** 該區間內所有玩家樓層都納入，不合併、不略過
 
 ### Requirement: 場景行格式顯式標示來源
-場景中每一行 SHALL 以 `[#樓號 來源／名字]` 開頭：玩家樓層來源為 `Player`，AI 樓層來源為 `Assistant`，名字取自該樓層的 `name`。此格式 SHALL 在開關開啟與關閉時皆適用，使開關兩態的唯一差異是有無玩家行。玩家樓層文字 SHALL 套用與 AI 樓層相同的 `filterTags` 過濾。
+場景中每一行 SHALL 以 `[#樓號 來源／名字]` 開頭：玩家樓層來源為 `Player`，AI 樓層來源為 `Assistant`，名字取自該樓層的 `name`。此格式 SHALL 在開關開啟與關閉時皆適用，使關閉開關時的行為是純粹移除玩家行、不連帶改變行首格式。玩家樓層文字 SHALL 套用與 AI 樓層相同的 `filterTags` 過濾。
 
 #### Scenario: 混合場景
 - **WHEN** 開關開啟、玩家名為「宇璽」、AI 樓層名為「银趴邮轮」
@@ -63,12 +63,12 @@
 - **WHEN** 開關開啟且 `enableRelation` 或 `enableArchive` 為 true
 - **THEN** 該兩路 prompt 的場景文字與改動前逐字相同
 
-### Requirement: 測試路徑保留完整對照材料
-擴充既有的「三路 API 調試」測試路徑 SHALL 在不寫入資料的前提下，把本次日記 prompt 的完整 user 訊息與完整日記回應文字記錄到瀏覽器 console，並存到 `window.__cdLastDiaryTest`，使同一批待處理樓層可在開關兩態下各跑一次並取得未截斷的成對輸出。
+### Requirement: 測試路徑保留完整材料
+擴充既有的「三路 API 調試」測試路徑 SHALL 在不寫入資料的前提下，把本次日記 prompt 的完整 user 訊息與完整日記回應文字記錄到瀏覽器 console，並存到 `window.__cdLastDiaryTest`，使單次採樣可取得未截斷的完整 prompt 與回應。
 
-#### Scenario: 同批 OFF 與 ON
-- **WHEN** 對同一批待處理樓層先關閉開關跑測試、再開啟開關跑測試
-- **THEN** 兩次都不改動 `processedFloors` 與日記資料，且兩次的完整 prompt 與回應皆可從 console 或 `window.__cdLastDiaryTest` 取得
+#### Scenario: 單次測試不寫入
+- **WHEN** 對當前待處理樓層跑一次測試路徑
+- **THEN** `processedFloors` 與日記資料不變，且完整 prompt 與回應皆可從 console 或 `window.__cdLastDiaryTest` 取得
 
 #### Scenario: 日誌面板的截斷不影響對照
 - **WHEN** 日誌面板的 detail 被截為 500 字
