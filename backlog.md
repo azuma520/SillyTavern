@@ -77,6 +77,10 @@ effort（多難）/ impact（多重要）metadata MUST NOT 以 tag 形式存在�
 
 ## 待辦
 
+- [SOP 候選] [case-count: 1] 凍結判準不等於凍結判讀規則——判準的適用界線（邊界情況算不算觸發）若在判讀中途才定，它會被已看到的資料影響，效果等同事後調整判準
+  → handoff 20260906 四（日記 Step 1 驗收：判準收材料前已凍結，但三條適用界線「斷言 vs 猜測」／「摘要 vs 逐字」／「②看心理表現」全在判讀中途才定，其中第一條直接決定否決條件的觸發難度。CLAUDE.md 的 Instrument 只涵蓋量測工具、未涵蓋判讀規則）
+- [bug] [P3] character-diary 日記會**替不在場的角色產生一篇「我沒出場」的日記**。2026-09-06 OFF／ON 對照實測（Branch #12、樓層 #1243–#1255）：OFF 態多產生一篇徐婷婷日記，`entry` 寫「這段時間我沒有出現在泳池派對中，也沒有參與……」、`key_events` 為空陣列、`secret` 還編了一句「希望自己之後仍有機會加入他們的行程」。同批 ON 態沒有這篇。花 token 生成、產出零資訊，且為該角色累積了一筆語意上不存在的記憶
+- [優化建議] character-diary 日記的 `relationship_with_others` 欄位**每次生成都寫、但沒有任何下游消費者**。查 `index.js` 只有兩處觸及：`:2247` 寫入、`:8700` 編輯時保留，**無任何讀取路徑**；且 `injectRelation` / `enableRelation` 現皆為 `false`。內容品質也不穩：2026-09-06 五組實測中，情境 1 為 `{}`、其餘各異，情境 2 寫「蘇芮萱：熟絡友好的老同學」與該 branch 起點（范婼慧 turn 1241「對她好奇又有些戒備，視作潛在競爭者」）矛盾。要嘛接上消費端，要嘛從 prompt 拿掉
 - [bug] [P3] character-diary 的「检查自动触发」按鈕（`cdCheckAutoTrigger`、`index.js:3295`）計數與真實觸發邏輯不一致：它用 `data._baselineChatLength` 當基線且**不**跳過 `processedFloors`，而真正的 `cdOnMessageReceived`（`:4876`）在 v2.7.3 已修成用 `data.lastFloor` 且跳過 `processedFloors`（`:4911`）
   → 該函式的註解仍寫「与 cdOnMessageReceived 一致的逻辑」，是修改前留下的過期註解
   → 後果：使用者拿這個按鈕看「還差幾樓觸發」時，數字可能與實際不符；它是唯一不花 token 的待處理樓層計數器，卻不能當對帳依據（CLAUDE.md §驗證前置 Gate · Instrument）
