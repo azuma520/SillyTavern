@@ -135,3 +135,73 @@ Session 開工：跑開工三步驟（`/work-status` → 讀 20260906 最新區�
 1. 主線不變：Step 2 挑候選 A（`key_events` actor 契約），寫量測腳本時做已知答案校準 + hash 凍結（驗收節點第 58 行 9/20 到期）
 2. 剑仙40 只在 #13 玩、#12 保持乾淨；#13 產出的日記不算進日記線統計
 3. 夏瑾 V1.0 Beta 要換用時再叫我做「東杰版」合併檔（9 條繁中規則 + 字數 + API 選擇）
+
+
+## Session 16:32
+
+### 一、本 session 主題
+
+日記品質線 Step 2：開立、實作、驗收並歸檔 change `diary-key-events-actor`——給 `key_events` 加 actor 契約（「主体：事件」、日記主人也寫主名、不改 schema）。
+順序守住「分類器先凍結、再改 prompt」。四個 Step 1 測試 branch 同段樓層重跑，五項標準全達標，使用者接受。順帶提早結清驗收節點 9/20 的 Instrument 一問。
+（本 session 工具集無 TaskCreate，完成事項由 tasks.md 27/28 與對話重建；擴充 UI 的操作全由使用者執行，agent 讀檔對帳。）
+
+### 二、完成事項
+
+- **規劃**：`/opsx:propose` 產出 proposal／design／specs／tasks；使用者三點校正已落文件：分類器 commit 必早於 prompt commit、248 條改稱「凍結基線」非 ground truth、標準 2 定義為「開頭是實際行為者（不限日記主人）＋全形冒號」
+- **查現況**：`cdBuildCombinedPrompt` 無呼叫點（死碼，不動）；`key_events` 13 個讀取點全為字串處理；`diaryMemory` 只注入 entry；Branch #12 每角色前 60／13／3 篇恰為 audit 的 248 條
+- **擴充 repo 分支**：`running` 快轉到 Step 1 的 `8d19c7f` 並推 `fork/running`；新分支 `diary-key-events-actor`；備份 `index.js.bak_key_events_actor_20260913_1359`
+- **分類器**：`文檔/專案/Diary-Quality/tools/classify_key_events.py`（五類＋①-strict、`--subset`／`--from`／`--selftest`）。校準 5 次嘗試逐一記錄；使用者選項 A：代名詞納入「主人」，基線 **52/5/18/48/125**、與 audit 差 1 條接受。凍結 commit elephantfish `21250a3`（14:16:21）
+- **prompt**：`cdBuildDiaryPrompt` sys 清單新增一行 actor 契約（第 836 行）、JSON 範本 placeholder 改「主体：事件」（第 847 行）；`node --check` 過；擴充 repo commit `7b861d3`、已推 `fork/diary-key-events-actor`
+- **smoke test**（使用者按「三路API调试」）：`rule: true`、`玩家角色名：宇璽`、6 條 key_events 全為「名字：事件」、不寫入（#12 仍 70/23/5）
+- **驗收**（Branch #8–#11，使用者按「历史补写」，`autoSummary` 期間關閉、事後開回）：6 篇新日記、19 條 `key_events`：⑤ 無主詞 0%（基線 50.4%）、①-strict 100%（基線 0）、使用者判歸屬錯誤 0 條、鍵集合 9 鍵不變、面板新舊混存顯示正常 → **五項全達標、接受**。材料 `RP記憶/實驗與驗證/Diary_KeyEvents_Actor_驗收_2026-09-13.md`
+- **歸檔**：主 spec `openspec/specs/diary-key-events-actor/spec.md` 新建、`openspec validate --all` 4 passed、change 移入 `archive/2026-09-13-diary-key-events-actor/`
+- **驗收節點**：9/20 Instrument 一問提早結案為達標（校準記錄落檔 + 凍結 commit 早於首則正式資料）
+- Diary-Quality README Changelog +1；backlog 新開 `[SOP 候選] [case-count: 1]`「量測工具的凍結單位是可重跑的腳本本體」（第 82 行）；memory 新增「claude-in-chrome 連不到本機 ST」
+
+### 三、未完事項 / 接力棒
+
+- [#接力] 日記品質線下一個 change 未開：建議 audit 候選 B（不在場角色，`cdCaptureCast` 以「被提及」判定、會編造內心狀態），smoke test 已見一篇空 `key_events` 的不在場日記；`relationship_with_others` 去留另案；P4「已有記憶」職責說明也還沒動
+- [#接力] LS 的 LIWE 載體設計討論仍掛 NEXT（本 session 未動）
+- [#提醒] 擴充 repo 現在 checkout 在 `diary-key-events-actor`（ST 正在跑這版）；`running` 落後它 1 個 commit（`7b861d3`），change 已接受、下次可快轉
+- [#提醒] Branch #8–#11 各多一組同樓層新日記（append，Step 1 舊篇未動），備份 `.bak_before_step2_rerun_20260913_1416`；標準 5 只在面板驗過、時間軸／搜尋／編輯器未逐一操作
+- [#提醒] 長期穩定性未驗：19 條來自同一段 Step 1 場景，#12 之後的新日記可隨時用凍結分類器 `--from` 再量
+- [#不重議] 凍結基線與 audit 差 1 條的來源不追（使用者裁定）
+
+### 四、洞見 / 反省
+
+**【紀律接力】**
+
+- 量測工具的凍結單位是可重跑的腳本本體，不是「規則描述＋結果數字」。9/6 audit 的分類器只留規則和 52/5/19/48/124，今天重建時名單和代名詞集合都得重猜，封閉集合內窮舉只能逼近到差 1 條。已開 `[SOP 候選]`（backlog 第 82 行）
+- 「校準基準」和「ground truth」要分開叫。248 條證明的是新分類器重現了 audit 的量法，不證明那 248 條分對了；真正的 ground truth 只有人工寫下的「誰做了什麼」。使用者今天糾正的這點已寫進 design 與驗收檔
+- 順序本身是證據：分類器 commit 14:16、prompt commit 14:2x、首則正式資料 16:05。三個時間戳排好，Instrument 那條驗收節點才能提早結清
+
+**【當日洞見】**
+
+- 對帳時間戳要看完整日期，不只看時分。把 9/6 的 15:47–16:28 讀成今天的，對使用者講了「四個 branch 都被開過」，錯了一輪才發現
+- 大段中文內容不要走 shell heredoc，會在看不出原因的地方炸開（`unexpected EOF while looking for matching quote`），直接用檔案寫入工具
+- 擴充控制的 Chrome 連不到本機 ST（127.0.0.1 與 localhost 皆拒連、curl 卻 200），這類 UI 步驟以後直接寫給使用者做、事後讀檔對帳（已存 memory）
+- smoke test 時不在場的角色拿到一篇 `key_events` 為空的日記，就是 audit 候選 B 的問題，下一個 change 的自然起點
+
+### 五、檔案異動
+
+**版控內（elephantfish）**
+
+- 已 commit：`21250a3` `文檔/專案/Diary-Quality/tools/classify_key_events.py`（新增，凍結）
+- 本 commit：`openspec/changes/archive/2026-09-13-diary-key-events-actor/`（proposal／design／specs／tasks）、`openspec/specs/diary-key-events-actor/spec.md`（新增）、`文檔/專案/Diary-Quality/README.md`（Changelog）、`驗收節點.md`（Instrument 一條打勾＋result）、`backlog.md`（第 82–83 行新條目）、`文檔/handoff/session-handoff-20260913.md`（本區塊）、`workflow-harness/work-map.jsonl`（Step 2 DONE、Step 3 新增並標 NEXT）
+
+**未進版控**：`RP記憶/實驗與驗證/Diary_KeyEvents_Actor_驗收_2026-09-13.md`（新增）；`文檔/專案/Diary-Quality/tools/__pycache__/`（不進）
+
+**擴充 repo（character-diary，`D:/AI/SillyTavern/public/scripts/extensions/third-party/character-diary`）**
+
+- `running` → `8d19c7f`（快轉，已推）；分支 `diary-key-events-actor` commit `7b861d3`（`index.js` +2 −1，已推 fork）；備份 `index.js.bak_key_events_actor_20260913_1359`
+
+**live ST `D:/AI/SillyTavern/data/default-user/`（不在版控）**
+
+- `chats/银趴邮轮/…Branch #8、#9、#10、#11.jsonl`：各 append 一組同樓層新日記；備份 `.bak_before_step2_rerun_20260913_1416`
+- `settings.json`：`autoSummary` 16:05 關、16:24 開回；其餘未動
+
+### 六、下一步建議
+
+1. 日記品質線 Step 3：`/opsx:propose` 候選 B（不在場角色）。動手前先重讀 audit §4.1 的 P2 因果鏈與 §七 候選 B 段，驗收標準要能事前釘死（例：製造「被提及但未出場」情境、數有沒有產日記）
+2. 擴充 repo：`running` 快轉到 `7b861d3` 並推 fork，再從 `running` 開 Step 3 分支
+3. LS 的 LIWE 載體設計討論（NEXT 已久，與日記線平行、不互相擋）
