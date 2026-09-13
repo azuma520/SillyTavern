@@ -205,3 +205,72 @@ Session 開工：跑開工三步驟（`/work-status` → 讀 20260906 最新區�
 1. 日記品質線 Step 3：`/opsx:propose` 候選 B（不在場角色）。動手前先重讀 audit §4.1 的 P2 因果鏈與 §七 候選 B 段，驗收標準要能事前釘死（例：製造「被提及但未出場」情境、數有沒有產日記）
 2. 擴充 repo：`running` 快轉到 `7b861d3` 並推 fork，再從 `running` 開 Step 3 分支
 3. LS 的 LIWE 載體設計討論（NEXT 已久，與日記線平行、不互相擋）
+
+## Session 21:55
+
+### 一、本 session 主題
+
+日記品質線 Step 3：開立、實作、驗收並歸檔 change `diary-presence-gate`（audit 候選 B／P2「不在場角色被寫日記並編造內心狀態」）。方案「模型判 presence、程式擋」，順序守住「場景與尺凍結 → instrument commit → 舊碼基線 → 改碼 → 新碼正式 20 run」。順帶把 Step 2 的尾巴（`running` 快轉、標準 5 三處讀取點）收掉。
+（本 session 工具集無 TaskCreate，完成事項由 tasks.md 與對話重建；ST UI 操作由使用者執行，後半改為檔案層預製子 branch + DevTools 主控台 runner，agent 讀檔對帳。）
+
+### 二、完成事項
+
+- **Step 2 收尾**：擴充 `running` 快轉到 `7b861d3` 並推 fork。標準 5 逐一操作：時間軸為死碼（`cdRenderTimeline` 無呼叫點、按鈕不在 HTML）、搜尋框被上游 `style.css:1650` 隱藏、編輯器顯示正常但**儲存會把含全形逗號的 key_events 切裂**（`split(/[,，、]/)`，Branch #8 一篇 3→5 條）；使用者裁定不還原、不順手修，backlog 新開 `[bug] [P3]`（第 89 行），Step 2 驗收檔 7.3 補記
+- **規劃**：`/opsx:propose` 產出四份 artifact；使用者七點核心設計 + 五項裁定（C／D／E 各 = 0、A ≥ 16／20、B ≥ 3／5 為 MVP 防退化門檻、越界 = 0、`presenceAudit` 上限 200；fail-closed；focusRoles 不豁免；兩種錯誤分開統計 D11；每 run 同 snapshot）全落 design／spec／tasks
+- **查現況**：因果鏈比 audit 多一層——誰能被寫由模型決定、`mergeDiaries` 無在場閘門、`cdCaptureCast` 是標籤洩漏；GM 卡下說話者永遠是卡名，程式判不了在場；`cdAddLog` 只在 localStorage、稽核記錄必須落聊天檔 store 頂層
+- **場景與尺**：四組場景（S1 A+B、S2 A+C、S3 A+D、S4 A+E）agent 起草、使用者兩處調整後定稿凍結；S1 附蘇芮萱可感知清單；期望表 `presence_expect.json`
+- **Instrument**：`presence_audit.py` 寫完、合成 fixture selftest 17 項（嘗試 1 敗於 fixture 期望值數錯 + 拿掉一個恆真檢查；嘗試 2 全過，判定邏輯未改），commit **`9a69fce42`（20:30:46）**
+- **母 branch**：#14–#17 從 #12 的 #1454 分出，場景兩樓由 agent 腳本寫入（使用者先刪多帶的 1455 樓）；四支逐字對帳、hash 記錄
+- **舊碼基線 12 run**：S1 #18–#20、S2 #21／#27／#28、S3 #24–#26、S4 #32–#34。**只有 S2 徐（只被提及）誘發缺陷 3／3**，其餘不在場格舊碼即為 0。S2 首輪 #22／#23 因「补写」按在母 branch 上而作廢、#15 以 #14 的 metadata 還原（新 hash `fc8124a0…`）
+- **改碼**：擴充分支 `diary-presence-gate` commit **`c73b6a3`（21:13:42）**，7 個 hunk +24 −3：sys 四條 presence 規則、範本 `presence` 欄位、`mergeDiaries` 閘門（黑名單之後、cameo／別名之前）、`presenceAudit` 雙寫、`emptyData` 預設、記憶注入標題中性化、`cdCaptureCast` 註解；已推 fork
+- **smoke**（#35）：`presenceAudit` 3 筆、蘇／徐 `absent` 被擋、范正常、entry 九鍵
+- **正式 20 run**（#36–#55，主控台 runner 連跑 5 分鐘）：C／D／E 誤寫 0／0／0（35 次機會）、模型判定錯誤 0、Gate 執行錯誤 0、A 20／20、B 5／5、越界 0（使用者判）、九鍵不變、稽核每次相符、上限 max 3；面板與編輯器顯示正常 → **十項全達標，接受**
+- **歸檔**：主 spec `openspec/specs/diary-presence-gate/spec.md` 新建、change 移入 archive、`openspec validate --all` 4 passed；擴充 `running` → `c73b6a3` 已推；`autoSummary` 開回（21:46）
+- **驗收節點**：2026-09-27「Presence Gate 長期效果」（只驗 #13、≥ 20 次合併後再量、不足順延）
+- README Changelog +1；memory 新增「日記驗收機械化」；runner 與兩支輔助腳本存 `RP記憶/實驗與驗證/scripts/`
+
+### 三、未完事項 / 接力棒
+
+- [#接力] 日記品質線 Step 4 未定，候選：P4「已有記憶」職責說明／P5 `relationship_with_others` 去留／E 情境加強場景（舊碼會寫的版本）／徐婷婷既有 5 篇「我沒出場」日記清理／`cdDiagCast` 面板「登场」文案
+- [#接力] LS 的 LIWE 載體設計討論仍掛 NEXT（本 session 未動）
+- [#提醒] 擴充 repo checkout 在 `diary-presence-gate`（= `running` = `c73b6a3`）；ST 正在跑這版
+- [#提醒] 測試資料全部保留：母 #14–#17（含備份）、基線 #18–#21／#24–#28／#32–#34、作廢 #22／#23、smoke #35、正式 #36–#55；刪不刪由使用者決定
+- [#提醒] 注入日記（`injectDiary`）使用者要開回；唯一副作用是徐婷婷那 5 篇舊日記被提及時會注入 RP prompt
+- [#不重議] Branch #8 編輯器切裂的 5 條不還原（使用者裁定）；E 情境是否加強場景由使用者決定
+
+### 四、洞見 / 反省
+
+**【紀律接力】**
+
+- 「不該發生」的格子要在凍結前用舊碼基線逐格確認**不是地板**。這輪 7 個不在場格只有 1 格在舊碼會誤寫，其餘 6 格的正式 0 只證明無退化；E 情境的保守規則因此根本量不到。CLAUDE.md Discrimination 寫了「避免地板效應」，但設計時推想不出來、要實測——已開 `[優化建議]`
+- 每個 run 從同一 snapshot 起跑，人工 UI 做不到：母 branch 被按「补写」污染一次、還原花兩輪。改成檔案層複製子 branch + 主控台 runner 後 25 run 零錯誤。重複性操作一旦超過 5 次就該機械化，不是叮嚀使用者小心
+- 凍結的腳本有兩處與凍結後的需求不合（逐情境 vs 合計門檻、`--since` vs `--parent/--run`），處理方式是改文件說明實作、不改腳本——凍結的價值在「尺沒被資料影響過」，文件跟著實作走是對的方向
+- 含中文錨點的 python 走 heredoc 三次都在看不出原因的地方失敗（字串找不到、路徑對不上），先 Write 成檔再跑一次都沒錯——backlog 第 116 行那條 SOP 候選今天 +1
+
+**【當日洞見】**
+
+- 舊碼只在角色被**對話**提及時亂寫（S2 3／3），敘述裡暗示「可能在隔壁」（S4）不會；「已知角色名单」本身不足以誘發。閘門的必要性由 S2 一格證明，其他格是保險
+- 模型對 E 情境四次判 `mentioned_only`、一次 `absent`、一次乾脆不輸出——三種都被擋，但「無法確認就判 absent」的保守規則沒被照字面執行，只是結果碰巧一致
+- ST 的分支 = 整份聊天檔複製（含 `character-diary` store），所以 `shutil.copy2` 等價；`openCharacterChat` 要先有選中的角色，F5 後直接跑會在 `characters[this_chid]` 上炸
+- 擴充編輯器儲存用 `split(/[,，、]/)`，任何含「，」的 key_events 一存就裂——上游既有缺陷，Step 2 spec 的「儲存後不變」scenario 對這種資料不成立
+- worktree 的 `RP記憶/` 與 `D:/AI/SillyTavern/RP記憶/` 已分岔：9/6 機制 audit 只在 D 槽、9/13 兩份驗收檔只在 worktree；今天把 audit 複製進 worktree，長期要定一份正本
+
+### 五、檔案異動
+
+**版控內（elephantfish）**
+
+- 已 commit：`9a69fce42` `文檔/專案/Diary-Quality/tools/presence_audit.py`、`presence_expect.json`（凍結 instrument）
+- 本 commit：`openspec/changes/archive/2026-09-13-diary-presence-gate/`（proposal／design／specs／tasks）、`openspec/specs/diary-presence-gate/spec.md`（新增）、`文檔/專案/Diary-Quality/README.md`（Changelog）、`backlog.md`（第 89 行 `[bug]`、第 116 行 bump、新 `[優化建議]`）、`驗收節點.md`（遠期 +1）、`文檔/handoff/session-handoff-20260913.md`（本區塊）、`workflow-harness/work-map.jsonl`（Step 3 DONE、Step 4 新增並標 NEXT）
+
+**未進版控**：`RP記憶/實驗與驗證/Diary_PresenceGate_驗收_2026-09-13.md`（新增）、`Diary_KeyEvents_Actor_驗收_2026-09-13.md`（7.3 補記）、`Diary_機制與Prompt_Audit_2026-09-06.md`（自 D 槽複製）、`RP記憶/實驗與驗證/scripts/diary_backfill_runner_console.js`／`presence_gate_write_scenes.py`／`presence_gate_restore_mother15.py`（新增）
+
+**擴充 repo（character-diary）**：`running` 7b861d3 → **c73b6a3**（已推 fork）；分支 `diary-presence-gate` = c73b6a3（已推）；備份 `index.js.bak_presence_gate_20260913_2111`
+
+**live ST `D:/AI/SillyTavern/data/default-user/`（不在版控）**：`chats/银趴邮轮/` 新增 Branch #14–#55（#29–#31 已刪）、#14–#17 備份 `.bak_before_scene_write_20260913_2047`、#15 備份 `.bak_polluted_by_mother_run_20260913_2103`；`settings.json` `autoSummary` 20:44 關、21:46 開回
+
+### 六、下一步建議
+
+1. 日記品質線 Step 4：從候選裡挑一個開 `/opsx:propose`。若要補 E 的鑑別力，先寫一個舊碼會亂寫的 E 場景跑基線再說；若先清資料，徐婷婷那 5 篇在 #13 面板手動刪
+2. 2026-09-27 驗收節點：#13 累積 ≥ 20 次日記合併後 agent 讀檔跑凍結腳本；不足順延
+3. LS 的 LIWE 載體設計討論（NEXT 已久，與日記線平行）
+4. `RP記憶/` 兩份副本要定正本（D 槽或 worktree），否則下次又找不到檔
