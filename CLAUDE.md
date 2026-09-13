@@ -125,6 +125,10 @@ E2E tests (`tests/frontend/*.e2e.js`, mostly for the macro engine) require the s
 - **驗世界書有沒有注入要看實際生成 log，不是 DRY RUN**——DRY RUN 不套用 sticky，
   看不到真實 prompt 全貌（2026-08-29 實測：同一次生成，實際 9 條 vs DRY RUN 6 條）
 - RP 工作文件與素材一律放 `RP記憶/`、不進版控
+- **`RP記憶/` 的正本只有一份，住在 worktree `C:\Users\user\orca\workspaces\SillyTavern\elephantfish\RP記憶\`**（2026-09-13 定案）。
+  `D:\AI\SillyTavern\RP記憶` 是指向它的 junction（`mklink /J`），兩邊看到的是同一份檔；不論從哪個 checkout 開工都寫這裡。
+  **新開 worktree 時要先在裡面建同樣的 junction**，否則 `RP記憶/` 會是空的、寫進去的檔就成了第二份（2026-09-06 就這樣漏了一個 audit 在 D 槽）。
+  要刪這個 worktree 前，先把正本搬到 git 外再刪。`D:\AI\SillyTavern-RP記憶\` 是 2026-09-13 的一次性快照副本、不是正本，可刪。
 
 ## 驗證前置 Gate
 
