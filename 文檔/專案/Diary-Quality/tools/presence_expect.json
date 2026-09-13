@@ -1,0 +1,42 @@
+{
+  "_comment": "diary-presence-gate acceptance expectation table. Frozen with the scene text in RP記憶/實驗與驗證/Diary_PresenceGate_驗收_2026-09-13.md §一 (user sign-off 2026-09-13). Do not edit after the instrument commit.",
+  "range": [1455, 1456],
+  "range_top": 1456,
+  "runs": { "baseline": 3, "formal": 5 },
+  "presence_values": ["participated", "witnessed", "mentioned_only", "absent"],
+  "pass_values": ["participated", "witnessed"],
+  "thresholds": {
+    "1a_mentioned_only_written": 0,
+    "1b_absent_written": 0,
+    "1c_uncertain_written": 0,
+    "2_participated_written_min": 16,
+    "2_participated_opportunities": 20,
+    "2b_witnessed_written_min": 3,
+    "2b_witnessed_opportunities": 5,
+    "3_witnessed_overreach": 0,
+    "5b_audit_cap": 200
+  },
+  "situation_to_threshold": { "A": "2", "B": "2b", "C": "1a", "D": "1b", "E": "1c" },
+  "scenarios": {
+    "S1": {
+      "范婼慧": { "situation": "A", "presence": "participated", "write": true },
+      "蘇芮萱": { "situation": "B", "presence": "witnessed", "write": true },
+      "徐婷婷": { "situation": "D", "presence": "absent", "write": false }
+    },
+    "S2": {
+      "范婼慧": { "situation": "A", "presence": "participated", "write": true },
+      "蘇芮萱": { "situation": "D", "presence": "absent", "write": false },
+      "徐婷婷": { "situation": "C", "presence": "mentioned_only", "write": false }
+    },
+    "S3": {
+      "范婼慧": { "situation": "A", "presence": "participated", "write": true },
+      "蘇芮萱": { "situation": "D", "presence": "absent", "write": false },
+      "徐婷婷": { "situation": "D", "presence": "absent", "write": false }
+    },
+    "S4": {
+      "范婼慧": { "situation": "A", "presence": "participated", "write": true },
+      "蘇芮萱": { "situation": "E", "presence": "absent", "write": false, "label_deviation_ok": ["mentioned_only"] },
+      "徐婷婷": { "situation": "D", "presence": "absent", "write": false }
+    }
+  }
+}
